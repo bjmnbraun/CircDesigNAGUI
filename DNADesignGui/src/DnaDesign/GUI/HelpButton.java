@@ -17,7 +17,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
+
 
 public class HelpButton extends JButton implements MouseListener{
 	private String msg,header;
@@ -117,12 +117,20 @@ public class HelpButton extends JButton implements MouseListener{
 	public void mouseClicked(MouseEvent e) {
 		mc.removeAllModalScale();
 		final JPanel openModalDialog = ModalUtils.openModalDialog(mc,f);
+		/*
 		final JTextArea comp = new JTextArea(msg){
 			{
 				setOpaque(false);
 				setFont(Font.decode("Verdana-11"));
 				setLineWrap(true);
 				setWrapStyleWord(true);
+			}
+		};
+		*/
+		final JLabel comp = new JLabel("<html><p>"+msg+"</p></html>"){
+			{
+				setOpaque(false);
+				setFont(Font.decode("Verdana-11"));
 			}
 		};
 		final JLabel compH = new JLabel("<html>"+header, JLabel.LEFT){
@@ -133,9 +141,12 @@ public class HelpButton extends JButton implements MouseListener{
 		};
 		openModalDialog.setLayout(new FlowLayout(FlowLayout.LEADING,0,0));
 		comp.setBorder(BorderFactory.createEmptyBorder(0,5,0,5));
+		compH.setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
 		final ScaleUtils su = new ScaleUtils();
 		su.addPreferredSize(compH, 1f, 0, 0, 24);
 		su.addPreferredSize(comp, 1f, 1f, 0, -28);
+		comp.setVerticalAlignment(JLabel.TOP);
+		
 		openModalDialog.add(compH);
 		openModalDialog.add(comp);
 		mc.addModalScale(new Runnable(){

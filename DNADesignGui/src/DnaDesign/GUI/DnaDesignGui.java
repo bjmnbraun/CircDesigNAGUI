@@ -35,6 +35,7 @@ import javax.swing.text.JTextComponent;
 import DnaDesign.DDSeqDesigner;
 import DnaDesign.DomainDesigner_5_RandomDesigner2;
 import DnaDesign.Exception.InvalidDNAMoleculeException;
+import DnaDesign.Exception.InvalidDomainDefsException;
 import DnaDesign.GUI.DNAPreviewStrand.UpdateSuccessfulException;
 
 public class DnaDesignGui extends Applet implements ModalizableComponent, CaretListener{
@@ -93,23 +94,24 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 		String[][] ComponentHelp = new String[][]{
 				{
 					"Domain Definition",
-					"The input of this box describes the DNA 'domains' which will be designed or used by the designer. Each line of this textual input describes a seperate domain in 4 fields: ID, Length, Sequence Constraints, and a flag for the presence of the Reverse Complement. \n\nExample:\n" +
-					"1	8	[--------]	*Y\n" +
-					"2	10	[GRR-----]	*Y\n" +
-					"a	4	GACC	*N\n" +
-					"3	10	GACTCCAG	*Y\n" +
-					"\n" +
-					"In this example, domain '1' is 8bp long and has no constraints. Domain '2' has some constraints imposed, where 'R' is a degenerate basepair (Google search for more information on this topic). Domains 'a' and '3' are locked, and will not be modified by the designer."
+					"The input of this box describes the DNA 'domains' which will be designed or used by the designer. Each line of this textual input describes a seperate domain in 4 fields: ID, Length, Sequence Constraints, and a flag for the presence of the Reverse Complement. <br><br>Example:<br>" +
+					"1	8	[--------]	*Y<br>" +
+					"2	10	[GRR-----]	*Y<br>" +
+					"a	4	[GACC]	*N<br>" +
+					"3	10	GACTCCAG	*Y<br>" +
+					"a2	4	gacc	*N<br>" +
+					"<br>" +
+					"In this example, domain '1' is 8bp long and has no constraints. Domain '2' has some constraints imposed, where 'R' is a degenerate basepair (Google search for more information on this topic). Domains 'a' is locked, and will not be modified by the designer. Domain 3 is not locked, but the designer will initiall seed its sequence with the given code. Wrapping a portion of the constraint in square brackets ('[' and ']') is equivalent to lowercase-ing the characters (see a2, which is the same as a)."
 				},
 				{
 					"Molecules",
-					"The input of this box describes the DNA molecules which are present in the solution being designed. Each line of this textual input describes a seperate molecule, in a format of multiple \"domain(Complement?)|\" elements. The designer will implicitly recognize the constraints imposed by these definitions. That is, \n" +
-					"   1)\tParts of DNA molecules not specified as duplexed will be have secondary structure removed during design.\n" +
-					"   2)\tDNA molecules will be designed to not hybridize with one another (nonspecific interactions) unless they contain at least one complementary domain.\n" +
-					"\n" +
-					"Example:\n" +
-					"C1		[3*|2*|1*}\n" +
-					"H1A-loop		[1*|4*}\n" +
+					"The input of this box describes the DNA molecules which are present in the solution being designed. Each line of this textual input describes a seperate molecule, in a format of multiple \"domain(Complement?)|\" elements. The designer will implicitly recognize the constraints imposed by these definitions. That is, <br>" +
+					"   1)\tParts of DNA molecules not specified as duplexed will be have secondary structure removed during design.<br>" +
+					"   2)\tDNA molecules will be designed to not hybridize with one another (nonspecific interactions) unless they contain at least one complementary domain.<br>" +
+					"<br>" +
+					"Example:<br>" +
+					"C1		[3*|2*|1*}<br>" +
+					"H1A-loop		[1*|4*}<br>" +
 					"H1A-tail		[5*|6*}"
 				}
 		};
@@ -180,32 +182,62 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 		}
 
 		{
-			JPanel PreviewSeqsProxy = new JPanel(){
+			PreviewSeqsProxy = new JPanel(){
 				public void setPreferredSize(Dimension d){
-					PreviewSeqs.setPreferredSize(new Dimension(d.width-3,d.height-3));
 					super.setPreferredSize(d);
 
-					if (getLocation().x!=0){
+					//if (getLocation().x!=0){
 						Point location = getLocation();
 						Component nextParent = getParent();
-						for(int i = 0; i < 2; i++){
+						for(int i = 0; i < 3; i++){
 							location.translate(nextParent.getLocation().x+1,nextParent.getLocation().y+1);
 							nextParent = nextParent.getParent();
+							//System.out.println(location);
 						}
 						PreviewSeqs.setLocation(location);
-					}
+					//}
+				}
+				public void paintComponent(Graphics g){
+					g.setColor(Color.black);
+					g.fillRect(0,0,getWidth()-2,getHeight());
 				}
 				{
-					setBackground(Color.black);
+					setBackground(Color.white);
 					setOpaque(true);
-					setBorder(BorderFactory.createEmptyBorder(1,1,1,1));
+					setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
 				}
 			};
-			PreviewSeqs = new DNAPreviewStrand();
+			PreviewSeqs = new DNAPreviewStrand(){
+				public void draw(){
+					if(modalPanel!=null && PreviewSeqs!=null){
+						if (modalPanel.getComponentCount()==0){
+							PreviewSeqs.setPreferredSize(new Dimension(PreviewSeqsProxy.getPreferredSize().width-8,
+									PreviewSeqsProxy.getPreferredSize().height-6));
+						}
+					}
+					super.draw();
+				}
+			};
 
-			JComponent holder = skinGroup(PreviewSeqsProxy, "Preview Molecule");
-			su.addPreferredSize(PreviewSeqsProxy, 1f-fractionLeftPanel, 0, -8, 0, 1f);
-			su.addPreferredSize(holder, 1f-fractionLeftPanel, 0, 0, 21, 1f);
+			JPanel DomainDefWithHelp = new JPanel();
+			DomainDefWithHelp.setOpaque(false);
+			DomainDefWithHelp.setLayout(new BorderLayout());
+			DomainDefWithHelp.add(PreviewSeqsProxy, BorderLayout.WEST);
+			DomainDefWithHelp.add(new HelpButton("Preview Molecule",
+					"The base pairs in the visualization are colored according to constraints:<br>" +
+					"<ul>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.G)+">G</font> (with black outline - base immutable)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.A)+">A</font> (with black outline - base immutable)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.T)+">T</font> (with black outline - base immutable)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.C)+">C</font> (with black outline - base immutable)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.NONE)+">-</font> (unconstrained)</li>" +
+					"</ul>",
+				this,this), BorderLayout.CENTER);
+			
+			JComponent holder = skinGroup(DomainDefWithHelp, "Preview Molecule");
+			su.addPreferredSize(PreviewSeqsProxy, 1f-fractionLeftPanel, 0, -10-HelpButton.dim.width, 0, 1f);
+			su.addPreferredSize(DomainDefWithHelp, 1f-fractionLeftPanel, 0, 0, 0, 1f);
+			su.addPreferredSize(holder, 1f-fractionLeftPanel, 0, 0, 4, 1f);
 			rightPanel.add(holder);
 		}
 		//add(PreviewSeqs);
@@ -248,6 +280,9 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 	}
 	
 	
+	private static String toHexCol(float[] g) {
+		return String.format("#%02x%02x%02x",(int)g[0],(int)g[1],(int)g[2]);
+	}
 	private void editableTextArea(JTextArea domainDef2) {
 		domainDef2.setEditable(true);
 		domainDef2.setTabSize(4);
@@ -318,10 +353,11 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 	private JTextArea DomainDef, Molecules, ErrorsOutText;
 	private String DomainDef_CLine="", Molecules_CLine="";
 	private DNAPreviewStrand PreviewSeqs;
+	private JPanel PreviewSeqsProxy;
 	private DDSeqDesigner cDesign;
 	private void createNewDesigner(){
 		ArrayList<String> inputStrands = new ArrayList<String>();
-		for(String q : Molecules.getText().split(System.getProperty("line.separator"))){
+		for(String q : Molecules.getText().split("\n")){
 			String[] line = q.split("\\s+");
 			if (line.length == 0 ){
 				continue;
@@ -383,9 +419,12 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 			PreviewSeqs.setCurrentPreviewMolecule(subCline, DomainDef.getText());
 		} catch (InvalidDNAMoleculeException e){
 			reportError(e.getMessage(), Molecules);
+		} catch (InvalidDomainDefsException e){
+			reportError(e.getMessage(), DomainDef);
 		} catch (UpdateSuccessfulException e){
 			reportError(null, null);
 		} catch (Throwable e){
+			reportError(e.getMessage(), null);
 			e.printStackTrace();
 		}
 	}
