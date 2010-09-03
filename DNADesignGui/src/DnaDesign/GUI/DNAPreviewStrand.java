@@ -1,15 +1,17 @@
 package DnaDesign.GUI;
 
-import static DnaDesign.DomainDesigner_ByRandomPartialMutations.DNA_COMPLEMENT_FLAG;
-import static DnaDesign.DomainDesigner_ByRandomPartialMutations.DNA_SEQ_FLAGSINVERSE;
+
+import static DnaDesign.DomainSequence.DNA_COMPLEMENT_FLAG;
+import static DnaDesign.DomainSequence.DNA_SEQ_FLAGSINVERSE;
 
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 
 import processing.core.PApplet;
 import processing.core.PFont;
-import processing.core.PMatrix;
 import DnaDesign.DomainStructureData;
 import DnaDesign.DomainStructureData.DomainStructure;
 import DnaDesign.DomainStructureData.HairpinStem;
@@ -44,19 +46,9 @@ public class DNAPreviewStrand extends PApplet{
 		}
 		//The world is your oyster, or you could refer to the page-system above.
 		g.background(255);
-		viewMatrix = g.getMatrix();
 	};
-	private PMatrix viewMatrix;
-	public void viewport(Rectangle2D.Float previewArea) {
-		viewport(previewArea.x,previewArea.y,previewArea.width,previewArea.height);
-	}
 	public void fillA(float[] color){
 		fill(color[0],color[1],color[2]);
-	}
-	public void viewport(double x, double y, double w, double h) {
-		g.setMatrix(viewMatrix);
-		g.translate((float)x*g.width,(float)y*g.height);
-		g.scale((float)w*g.width,(float)h*g.height);
 	}
 	/**
 	 * Just the part that looks like "[3*.|2*.|1*.}
@@ -69,6 +61,15 @@ public class DNAPreviewStrand extends PApplet{
 		domainDefsBlock = domainDefs;
 		screen1.preview.updateMolecule();
 	}
+	public void snapShot(){
+		needsSnapshot = true;
+	}
+	public String getLastSnapshotPath() {
+		return snapshotPath;
+	}
+	public boolean isTakingSnapshot() {
+		return needsSnapshot;
+	}
 	public static class UpdateSuccessfulException extends RuntimeException{
 	}
 	public static class ConstraintColors {
@@ -77,18 +78,19 @@ public class DNAPreviewStrand extends PApplet{
 		                      A = new float []{0,0,255},
 		                      T = new float []{125,125,0},
 		                      C = new float []{112,24,27},
-		                      GL = new float []{0,128,0},
-		                      AL = new float []{0,0,255},
-		                      TL = new float []{125,125,0},
-		                      CL = new float []{112,24,27},
+		                      D = new float []{100,0,140},
+		                      H = new float []{24,27,120},
+		                      P = new float []{100,100,140},
+		                      Z = new float []{24,100,120},
 		                      NONE = new float []{200,200,200},
 		                      ERROR = new float []{255,0,0}
-		                      ;
+		;
 		
 	}
 	private String currentMoleculeString = "";
 	private String domainDefsBlock = "";
-	private boolean needsCurrentMoleculeUpdate = true;
+	private boolean needsCurrentMoleculeUpdate = true, needsSnapshot = false;
+	private String snapshotPath = null;
 	private DnaDesignScreens$0_Screen screen1;
 	//Branch code:
 	public class DnaDesignScreens$0_Screen {
@@ -122,7 +124,7 @@ public class DNAPreviewStrand extends PApplet{
 							throw new InvalidDomainDefsException(e.getMessage());
 						}
 						try {
-							DomainStructureData.readStructure(currentMoleculeString, dsd);
+							DomainStructureData.readStructure("preview", currentMoleculeString, dsd);
 						} catch (Throwable e){
 							//e.printStackTrace();
 							throw new InvalidDNAMoleculeException(e.getMessage(),0);
@@ -235,11 +237,13 @@ public class DNAPreviewStrand extends PApplet{
 				}
 				float wiggleTheta = sin(frameCount/120f*(1+ds.random0*.3f)+ds.random0*TWO_PI)*.3f;
 				float eW = .03f;
-				float openingSize = 2.5f;
+				float openingSize = 2f;
+				//Additional space to put on the ring, due to the opening of the loop.
+				float ringAdd = openingSize / 2;
 				if (ds instanceof DomainStructureData.SingleStranded){
 					float deltaTheta = 0;
 					if (hairpinSize!=-1){
-						deltaTheta = TWO_PI/(hairpinSize+openingSize);
+						deltaTheta = TWO_PI/(hairpinSize+ringAdd);
 					} else {
 						rotate(wiggleTheta);
 					}
@@ -266,7 +270,7 @@ public class DNAPreviewStrand extends PApplet{
 				} else if (ds instanceof DomainStructureData.HairpinStem){
 					DomainStructureData.HairpinStem hs = (DomainStructureData.HairpinStem)ds;
 					if (hairpinSize!=-1){
-						rotate(TWO_PI/(hairpinSize+openingSize)*openingSize);
+						rotate(TWO_PI/(hairpinSize+ringAdd)*(openingSize));
 					} else {
 						if (!inShaft)
 							rotate(wiggleTheta);
@@ -312,23 +316,55 @@ public class DNAPreviewStrand extends PApplet{
 						inShaft2 &= hs.subStructure.size()==1;
 					}
 					if (!inShaft2){
-						//Loop!
-						translate(0,-eW*3);
-						rotate(-HALF_PI);
-						//Account for the opening
-						rotate(TWO_PI/(hs.innerCurveCircumference+openingSize)*openingSize/2);
-					}
-					//Recurse up shaft
-					for(int k = 0; k < hs.subStructure.size(); k++){
-						DomainStructure domainStructure = hs.subStructure.get(k);
-						drawStructure(domainStructure,trueDraw,hs.innerCurveCircumference, inShaft2);	
+						boolean isClosedLoop = hs.leftRightBreak==-1;
+						if (isClosedLoop){
+							//Loop!
+							translate(0,-eW*openingSize);
+							rotate(-HALF_PI);
+							//Account for the opening
+							rotate(TWO_PI/(hs.innerCurveCircumference+ringAdd)*openingSize/2);
+							//Recurse through closed loop
+							for(int k = 0; k < hs.subStructure.size(); k++){
+								DomainStructure domainStructure = hs.subStructure.get(k);
+								drawStructure(domainStructure,trueDraw,hs.innerCurveCircumference, inShaft2);	
+							}
+						} else {
+							//Broken loop. Render the right, then the left (stack)
+							translate(0,-eW*openingSize);
+							rotate(-HALF_PI);
+							pushMatrix();
+							{
+								rotate(PI);
+								translate(eW*openingSize*2,0);
+								//Recurse through left
+								for(int k = hs.leftRightBreak+1; k < hs.subStructure.size(); k++){
+									DomainStructure domainStructure = hs.subStructure.get(k);
+									drawStructure(domainStructure,trueDraw,-1, inShaft2);	
+								}
+							}
+							popMatrix();
+							for(int k = 0; k <= hs.leftRightBreak; k++){
+								DomainStructure domainStructure = hs.subStructure.get(k);
+								drawStructure(domainStructure,trueDraw,-1, inShaft2);	
+							}
+						}
+					} else {
+						//Recurse up shaft
+						for(int k = 0; k < hs.subStructure.size(); k++){
+							DomainStructure domainStructure = hs.subStructure.get(k);
+							drawStructure(domainStructure,trueDraw,hs.innerCurveCircumference, inShaft2);	
+						}
 					}
 					popMatrix();
 					translate(eW*openingSize,0); //Size of opening.
+					/*
+					if (hairpinSize!=-1){
+						rotate(TWO_PI/(hairpinSize+openingSize));
+					}
+					*/
 					translate(eW*2,0);
 				} else if (ds instanceof DomainStructureData.ThreePFivePOpenJunc){
 					stroke(0);
-					strokeWeight(2);
 					if (trueDraw){	
 						line(-eW,0,eW,0);
 						line(0,-eW,eW,0);
@@ -339,7 +375,6 @@ public class DNAPreviewStrand extends PApplet{
 			}
 			private void drawBase(float eW, int domain, int k) {
 				stroke(0);
-				strokeWeight(2);
 				line(-eW,0,eW,0);
 				boolean isComp = (domain & DNA_COMPLEMENT_FLAG)!=0;
 				/**
@@ -348,7 +383,7 @@ public class DNAPreviewStrand extends PApplet{
 				char constraint = dsd.getConstraint(domain).charAt(isComp?dsd.domainLengths[domain&DNA_SEQ_FLAGSINVERSE]-1-k:k);
 				int sCol = color(0); //the Good color.
 				noStroke();
-				switch(constraint){
+				switch(Character.toUpperCase(constraint)){
 				case 'G':
 					fillA(!isComp?ConstraintColors.G:ConstraintColors.C); break;
 				case 'A':
@@ -357,26 +392,21 @@ public class DNAPreviewStrand extends PApplet{
 					fillA(!isComp?ConstraintColors.T:ConstraintColors.A); break;
 				case 'C':
 					fillA(!isComp?ConstraintColors.C:ConstraintColors.G); break;
-				case 'g':
-					fillA(!isComp?ConstraintColors.GL:ConstraintColors.CL);
-					stroke(0);
-					break;
-				case 'a':
-					fillA(!isComp?ConstraintColors.AL:ConstraintColors.TL);
-					stroke(0);
-					break;
-				case 't':
-					fillA(!isComp?ConstraintColors.TL:ConstraintColors.AL);
-					stroke(0); 
-					break;
-				case 'c':
-					fillA(!isComp?ConstraintColors.CL:ConstraintColors.GL);
-					stroke(0); 
-					break;
+				case 'D':
+					fillA(!isComp?ConstraintColors.H:ConstraintColors.D); break;
+				case 'H':
+					fillA(!isComp?ConstraintColors.D:ConstraintColors.H); break;
+				case 'P':
+					fillA(!isComp?ConstraintColors.H:ConstraintColors.D); break;
+				case 'Z':
+					fillA(!isComp?ConstraintColors.D:ConstraintColors.H); break;
 				case '-':
 					fillA(ConstraintColors.NONE); break;
 				default:
 					fillA(ConstraintColors.ERROR); break;
+				}
+				if (Character.isLowerCase(constraint)){
+					stroke(sCol);
 				}
 				ellipseMode(CORNERS);
 				ellipse(-eW*.9f,-eW*.9f,eW*2*.9f,eW*2*.9f);
@@ -385,8 +415,8 @@ public class DNAPreviewStrand extends PApplet{
 				textFont(ff);
 				if (!trueDraw){
 					for(int mult = -1; mult <= 1; mult++){
-						particlepositions[particlepoints][0] = modelX(spacing*mult, 0, 0)/width;
-						particlepositions[particlepoints][1] = modelY(spacing*mult, 0, 0)/height;
+						particlepositions[particlepoints][0] = screenX(spacing*mult, 0)/width;
+						particlepositions[particlepoints][1] = screenY(spacing*mult, 0)/height;
 						particlepoints++;
 					}
 					return;
@@ -438,21 +468,35 @@ public class DNAPreviewStrand extends PApplet{
 			}
 		}
 		public void draw() {
-			viewport(previewArea);
+			pushMatrix();
+			scale(width,height);
 			stroke(0);
 			noFill();
 			drawGrid();
-			
+			popMatrix();
+			pushMatrix();
+			strokeWeight(2);
+			boolean isSnapshotting = false;
+			if (needsSnapshot){
+				isSnapshotting = true;
+				File temp;
+				try {
+					temp = File.createTempFile("DNADesignPreview"+System.nanoTime(), ".pdf");
+					beginRecord(PDF, snapshotPath = temp.getAbsolutePath());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				strokeWeight(2f/width);
+			}
+			scale(width,height);
 			//Draw current selected sequence?
 			drawPreviewSequence();
 			//Sequence select wheel (click or use arrow keys to slide up / down)
-			
-			viewport(0,0,1,1);
-			stroke(0);
-			noFill();
-			//rect(previewArea.x, previewArea.y, previewArea.width, previewArea.height);
-			
-			//buttons.draw();
+			if (isSnapshotting){
+				endRecord();
+				needsSnapshot = false;
+			}
+			popMatrix();
 		}
 		public void drawPreviewSequence(){
 			pushMatrix();
@@ -491,7 +535,12 @@ public class DNAPreviewStrand extends PApplet{
 	}
 
 	public void ellipse(float x, float y, float w, float h){
-	    float radiusH = w / 2;
+		if (needsSnapshot){
+			ellipseMode(CORNER);
+			super.ellipse(x,y,w,h);
+			return;
+		}
+		float radiusH = w / 2;
 	    float radiusV = h / 2;
 
 	    float centerX = x + radiusH;

@@ -85,6 +85,8 @@
             <src path="${toCompileJava}" />
 	<classpath>
 <pathelement location="${lib}/Java/Processing/core.jar"/>
+<pathelement location="${lib}/Java/Processing/pdf/library/itext.jar"/>
+<pathelement location="${lib}/Java/Processing/pdf/library/pdf.jar"/>
 <!--
 <pathelement location="${lib}/Java/Processing/minim/library/tritonus_share.jar"/>
 <pathelement location="${lib}/Java/Processing/minim/library/jl1.0.jar"/>
@@ -119,6 +121,8 @@
 	<!--	<delete file="./web/${webjar}" /> -->
 		<jar jarfile="./web/${webjar}" includes="${onlineIncludes}" basedir="./bin/">
 			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/core.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/pdf/library/itext.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/pdf/library/pdf.jar" />
 <!--
 			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/minim/library/jl1.0.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/minim/library/mp3spi1.9.4.jar" />
@@ -143,9 +147,8 @@
 	<target name="uploadHtml" description="Prepares the app for the web (required for all use)">
 		<!-- sign the jar! -->
 		<echo message="NOTE: you have to create a key/value pair using KeyTool and use it to sign the jar! " />
-		<!--
+		
 		<signit dir="/web/" file="${webjar}" keyname="mykey2" pass="codeofdoom" />
-		-->
 		
 		<copy todir=".">
 			<fileset dir="${dataDir_local}/web" includes="*.html,*.jnlp" />

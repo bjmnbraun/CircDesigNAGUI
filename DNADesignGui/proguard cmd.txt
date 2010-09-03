@@ -1,0 +1,2 @@
+java -jar proguard.jar -injars "{INPUTJAR}" -outjars "{OUTPUTJAR}" -libraryjars "<java.home>\lib\rt.jar" -keep "public class {MAINCLASSENTRY} { public void *(...); }" -keepclassmembers "class * { public void *(...); }" -dontoptimize -overloadaggressively
+

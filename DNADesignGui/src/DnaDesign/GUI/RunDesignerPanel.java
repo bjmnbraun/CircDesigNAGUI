@@ -1,7 +1,10 @@
 package DnaDesign.GUI;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -13,8 +16,8 @@ import javax.swing.JTextArea;
 import DnaDesign.DDSeqDesigner;
 
 public class RunDesignerPanel {
-	public RunDesignerPanel(ModalizableComponent mc, final DDSeqDesigner cDesign, Font monoSpaceFont){
-		final JTextArea outputText = new JTextArea("New Designer Created.");
+	public RunDesignerPanel(ModalizableComponent mc, final DDSeqDesigner cDesign, Font monoSpaceFont, final DesignerVisualGraph showGraph){
+		final JTextArea outputText = new JTextArea("No output. First begin the designer, and then press the button again to show an intermediate result.");
 		final JButton resumeDesigner = new JButton("Resume Designer"){
 			private boolean designerRunning = false, designerFinished1 = false;
 			{
@@ -62,26 +65,69 @@ public class RunDesignerPanel {
 				});
 			}
 		};
+		JButton ToggleVisualDisplay = new JButton(){
+			private boolean textToggle = false;
+			private void toggleText(){
+				textToggle = !textToggle;
+				setText(textToggle?"View Designer Status as Text":"View Designer Status Graphically");
+			}
+			{
+				toggleText();
+				addActionListener(new ActionListener(){
+					public void actionPerformed(ActionEvent e) {
+						toggleText();
+						showGraph.setVisible(textToggle);
+						//openModalDialog.validate();
+					}
+				});
+			}
+		};
 		mc.removeAllModalScale();
 		outputText.setEditable(false);
 		final JPanel openModalDialog = ModalUtils.openModalDialog(mc,monoSpaceFont, new Runnable(){;
 			public void run(){
 				cDesign.abort();
+				showGraph.setVisible(false);
 			}
 		});
 		openModalDialog.setLayout(new BorderLayout());
-		openModalDialog.add(resumeDesigner, BorderLayout.NORTH);
-		JScrollPane holder = new JScrollPane(outputText);
+		JPanel buttons = new JPanel();
+		buttons.setLayout(new GridLayout(2,0));
+		buttons.add(resumeDesigner);
+		buttons.add(ToggleVisualDisplay);
+		openModalDialog.add(buttons,BorderLayout.NORTH);
+		final JScrollPane holder = new JScrollPane(outputText);
+		
 		openModalDialog.add(holder, BorderLayout.CENTER);
 		final ScaleUtils su = new ScaleUtils();
-		su.addPreferredSize(resumeDesigner, 0, 0, 200, 40);
+		//su.addPreferredSize(resumeDesigner, 0, 0, 200, 40);
+		//su.addPreferredSize(ToggleVisualDisplay, 0, 0, 200, 40);
+		su.addPreferredSize(buttons, 0, 0, 200, 80);
 		su.addPreferredSize(holder, 1f, 1f, 0, -50);
-		su.addPreferredSize(outputText, 1f, 1f, 0, -50);
+		//su.addPreferredSize(outputText, 1f, 1f, 0, -50);
+		
 		mc.addModalScale(new Runnable(){
 			public void run() {
-				su.pushSizes(openModalDialog.getPreferredSize().width, openModalDialog.getPreferredSize().height);
+				int w = openModalDialog.getPreferredSize().width;
+				int h = openModalDialog.getPreferredSize().height;
+				su.pushSizes(w, h);
+
+				Point location = holder.getLocation();
+				Component nextParent = holder.getParent();
+				for(int i = 0; i < 3; i++){
+					if (nextParent!=null){
+						location.translate(nextParent.getLocation().x,nextParent.getLocation().y);
+						nextParent = nextParent.getParent();
+						//System.out.println(location);
+					}
+				}			
+				showGraph.setBounds(location.x,location.y,holder.getWidth(),holder.getHeight());
+				//showGraph.setLocation(location.x,location.y);
+				//showGraph.setPreferredSize(new Dimension(holder.getWidth(),holder.getHeight()));
 				openModalDialog.validate();
 			}
 		});
+		showGraph.setDesigner(cDesign);
+		showGraph.setVisible(true);
 	}
 }
