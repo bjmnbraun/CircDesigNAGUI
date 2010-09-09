@@ -2,7 +2,23 @@
 
 <project name="DnaDesignGUI.makejar" basedir="./build/" default="default">
 	<!-- make sure outjar / outjar2 are both only filenames, no paths. -->
-	<property name="DeploymentName" value="DnaDesign" />
+
+<!-- random number generator, lol. -->	
+	<scriptdef language="javascript" manager="javax" name="random"><attribute name="max"/><attribute name="property"/>
+var max=attributes.get("max")
+var property=attributes.get("property")
+if(max==null || property==null) {
+  self.fail("'property' or 'max' is not set")
+} else { 
+  var result=java.util.Random().nextInt(max) 
+  self.log("Generated random number " + result)
+  project.setNewProperty(property, result);
+}
+	</scriptdef>
+
+	<random max="999999" property="Disambiguator"/>
+	<property name="DeploymentJarMatches" value="DnaDesignr" />
+	<property name="DeploymentName" value="${DeploymentJarMatches}${Disambiguator}" />
 	<property name="p5Main" value="DnaDesign.GUI.DnaDesignGui" />
 	<property name="DnaDesignPath" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\DNADesign\DNADesign" />
 	
@@ -51,6 +67,7 @@
 	
 	<!--Def the tasks. -->
 	<taskdef name="increment" classname="uttaifun.funant.increment" classpath="${DSS_anttasks_path}" />
+	<taskdef name="trycatch" classname="net.sf.antcontrib.logic.TryCatchTask" classpath="${ant_contrib_jar}"/>
 	<taskdef name="srchreplace" classname="uttaifun.funant.srchReplace" classpath="${DSS_anttasks_path}" />
 	<taskdef name="signit" classname="uttaifun.funant.signit" classpath="${DSS_anttasks_path}" />
 	<taskdef name="for" classname="net.sf.antcontrib.logic.ForTask" classpath="${ant_contrib_jar}"/>
@@ -118,7 +135,21 @@
 		-->
 
 		<!-- custom make the main jar -->
-	<!--	<delete file="./web/${webjar}" /> -->
+		
+	<trycatch property="foo" reference="bar">
+  <try>
+	    <delete>
+		<fileset dir="./web/" includes="${DeploymentJarMatches}*" />
+		</delete>
+  </try>
+
+  <catch>
+    <echo>Could not delete old jars. No problem, but may cause clutter.</echo>
+  </catch>
+
+  <finally>
+  </finally>
+</trycatch>
 		<jar jarfile="./web/${webjar}" includes="${onlineIncludes}" basedir="./bin/">
 			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/core.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/pdf/library/itext.jar" />
