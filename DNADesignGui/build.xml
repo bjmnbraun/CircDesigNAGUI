@@ -17,12 +17,13 @@ if(max==null || property==null) {
 	</scriptdef>
 
 	<random max="999999" property="Disambiguator"/>
-	<property name="DeploymentJarMatches" value="DnaDesignr" />
+	<property name="DeploymentJarMatches" value="DnaDesignerGui" />
 	<property name="DeploymentName" value="${DeploymentJarMatches}${Disambiguator}" />
-	<property name="p5Main" value="DnaDesign.GUI.DnaDesignGui" />
+	<property name="p5Main" value="DnaDesignGUI.DnaDesignGui" />
+	<!-- Path to the actual DNADesign package. -->
 	<property name="DnaDesignPath" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\DNADesign\DNADesign" />
 	
-	<property name="DSSEngine_path" value="C:/Users/Benjamin/PROGRAMMING/Personal/GithubRepos/DanmakuSimpleScript-Engine---Simulator/DSSEngine" />
+	<property name="DSSEngine_path" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\TaiWebDeployUtils/DSSEngine" />
 	<property name="DSS_anttasks_path" value="${DSSEngine_path}/DSS-anttasks.jar" />
 	<property name="ant_contrib_jar" value="${DSSEngine_path}/ant-contrib-1.0b3.jar" />
 	
@@ -150,7 +151,9 @@ if(max==null || property==null) {
   <finally>
   </finally>
 </trycatch>
-		<jar jarfile="./web/${webjar}" includes="${onlineIncludes}" basedir="./bin/">
+        <jar jarfile="./web/DnaDesign.jar" basedir="./bin/" includes="DnaDesign/**/*.class">
+		</jar>
+		<jar jarfile="./web/${webjar}" includes="${onlineIncludes}" basedir="./bin/" excludes="DnaDesign/**/*.class">
 			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/core.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/pdf/library/itext.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/pdf/library/pdf.jar" />
@@ -180,6 +183,7 @@ if(max==null || property==null) {
 		<echo message="NOTE: you have to create a key/value pair using KeyTool and use it to sign the jar! " />
 		
 		<signit dir="/web/" file="${webjar}" keyname="mykey2" pass="codeofdoom" />
+		<signit dir="/web/" file="DnaDesign.jar" keyname="mykey2" pass="codeofdoom" />
 		
 		<copy todir=".">
 			<fileset dir="${dataDir_local}/web" includes="*.html,*.jnlp" />
@@ -190,7 +194,7 @@ if(max==null || property==null) {
 		<srchreplace srcfile="${basedir}/web_template3.html" destfile="${basedir}/web_template4.html" srch="{APPLETHEIGHT}" rep="480" deletesrch="true" />
 		<srchreplace srcfile="${basedir}/web_template4.html" destfile="${basedir}/web_templatefinal.html" srch="{DESTINATION_URL_DIR}" rep="${deploypath}" deletesrch="true" />
 		<!-- {CLASSLIBJAR} needs to become our outjar name. Put in /web/index.html -->
-		<srchreplace srcfile="${basedir}/web_templatefinal.html" destfile="${basedir}/index2.html" srch="{CLASSLIBJAR}" rep="${webjar}" deletesrch="true" />
+		<srchreplace srcfile="${basedir}/web_templatefinal.html" destfile="${basedir}/index2.html" srch="{CLASSLIBJAR}" rep="${webjar},DnaDesign.jar" deletesrch="true" />
 		<move todir="${basedir}/web">
 			<fileset dir="." includes="*.html,*.jnlp" />
 		</move>
