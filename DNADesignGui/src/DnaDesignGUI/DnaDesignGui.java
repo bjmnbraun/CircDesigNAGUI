@@ -96,15 +96,18 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 		String[][] ComponentHelp = new String[][]{
 				{
 					"Domain Definition",
-					"The input of this box describes the DNA 'domains' which will be designed or used by the designer. Each line of this textual input describes a seperate domain in multiple fields: ID, Length, Sequence Constraints, Flags. <br><br>Example:<br>" +
+					"The input of this box describes the DNA 'domains' which will be designed or used by the designer. Each line of this textual input describes a seperate domain in the syntax:<br>" +
+					"&#60;ID&#62; &#60;Length&#62; {Sequence Constraints} {-Option1{(arguments)}}<br>" +
+					"Where &#60;bracket&#62;'ed elements are Required fields, and {bracket}'ed elements are Optional.<br><br>Example:<br>" +
 					"1	8	[--------]	<br>" +
 					"2	10	GRR[-----]	<br>" +
 					"a	4	GACC	<br>" +
 					"3	10	[GACTCCAG]	-iso(3)<br>" +
 					"4	9	[AAAAAAAAA]	-p<br>" +
 					"5	9	[AAAAAAAAA]	-pz(2)<br>" +
-					"<br>" +
-					"In this example, domain '1' is 8bp long and has no constraints. Domain '2' has some constraints imposed, where 'R' is a degenerate basepair (Google search for more information on this topic). Domains 'a' is locked, and will not be modified by the designer. Wrapping a portion of the constraint in square brackets ('[' and ']') flags that the given portion of the domain is mutable. Domain 3 is not locked, but the designer will initiall seed its sequence with the given code." +
+					"<br><br>" +
+					"Translates to:<br>" +
+					"Domain '1' is 8bp long and has no constraints. Domain '2' has some constraints imposed, where 'R' is a degenerate basepair. Domains 'a' is locked, and will not be modified by the designer. Wrapping a portion of the constraint in square brackets ('[' and ']') flags that the given portion of the domain is mutable. Domain 3 is not locked, but the designer will initiall seed its sequence with the given code." +
 					"Additionally, the -iso(3) flag means that at most 3 d/h bases will be introduced in this domain, where d/h are the 'ISOC' and 'ISOG' bases, respectively. By default, no such exotic bases are added. Domain 4 will be mutated to maintain its initial amino acid sequence (-p flag), and Domain 5 has a flag, -pz, which is similar to the -iso flag except for the 'p' and 'z' exotic bases."
 				},
 				{
@@ -311,7 +314,6 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 			}
 		};
 		modalPanel.setOpaque(false);
-		modalPanel.setLocation(new Point(30,30));
 		overlay.add(modalPanel);
 		su.addPreferredSize(modalPanel, .9f,.9f); //Left half
 		bottom.add(overlay, JLayeredPane.MODAL_LAYER);

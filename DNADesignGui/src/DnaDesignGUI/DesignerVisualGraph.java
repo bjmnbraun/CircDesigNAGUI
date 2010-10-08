@@ -206,7 +206,7 @@ public class DesignerVisualGraph extends PApplet{
 			float value = values[tk][k];
 			if (thicknessIsScore){
 				if (value > ENDTHRESHOLD){
-					stroke(value,0,0);
+					stroke(0,0,0);
 					value /= maxValue;
 					strokeWeight((value+1)*strokeScale);
 					return true;
