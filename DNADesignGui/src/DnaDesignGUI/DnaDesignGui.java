@@ -102,13 +102,25 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 					"1	8	[--------]	<br>" +
 					"2	10	GRR[-----]	<br>" +
 					"a	4	GACC	<br>" +
-					"3	10	[GACTCCAG]	-iso(3)<br>" +
+					"3	10	[GACTCCAG]	-seq(A,-1,-1,T,-1,3,G,1,-1,C,2,4)<br>" +
 					"4	9	[AAAAAAAAA]	-p<br>" +
-					"5	9	[AAAAAAAAA]	-pz(2)<br>" +
+					"5  8  -seq(D,-1,-1,P,-1,-1,Z,-1,-1,H,-1,-1)"+	
 					"<br><br>" +
 					"Translates to:<br>" +
-					"Domain '1' is 8bp long and has no constraints. Domain '2' has some constraints imposed, where 'R' is a degenerate basepair. Domains 'a' is locked, and will not be modified by the designer. Wrapping a portion of the constraint in square brackets ('[' and ']') flags that the given portion of the domain is mutable. Domain 3 is not locked, but the designer will initiall seed its sequence with the given code." +
-					"Additionally, the -iso(3) flag means that at most 3 d/h bases will be introduced in this domain, where d/h are the 'ISOC' and 'ISOG' bases, respectively. By default, no such exotic bases are added. Domain 4 will be mutated to maintain its initial amino acid sequence (-p flag), and Domain 5 has a flag, -pz, which is similar to the -iso flag except for the 'p' and 'z' exotic bases."
+					"Domain '1' is 8bp long and has no constraints. " +
+					"Domain '2' has some constraints imposed, where 'R' is a degenerate basepair. " +
+					"Domain 'a' is locked, and will not be modified by the designer. " +
+					"<br>Wrapping a portion of the constraint in square brackets ('[' and ']') flags that the given portion of the domain is mutable. " +
+					"Domain 3 is not locked, but the designer will initiall seed its sequence with the given code." +
+					"Additionally, Domain 3 has composition based constraints imposed, with the -seq option, where <br>" +
+					"<ul>" +
+					"<li>Any number of A's are allowed (-1 means no lower bound, -1 means no upper bound)</li>"+
+					"<li>Number of T's &#60;= 3 (-1 means no lower bound, 3 is upper bound)</li>"+
+					"<li>Number of G's &#62;= 1 (1 is lower bound, -1 means no upper bound)</li>"+
+					"<li>2 &#60;= Number of C's &#60;= 4 (2 lower bound, 4 upper bound)</li>"+
+					"</ul>"+
+					"Additionally, the -seq option also allows one to experiment with exotic bases (D,P,H,Z). By default, these bases are set to lower bound 0, upper bound 0 (so they are disallowed). " +
+					"In Domain 5, the -seq arguments specify that any number of D,P,H, and Z are allowed, overriding this default."
 				},
 				{
 					"Molecules",
@@ -346,6 +358,8 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 		domainDef2.setTabSize(4);
 		domainDef2.setFont(monoSpaceFont);
 		domainDef2.addCaretListener(this);
+		domainDef2.setWrapStyleWord(false);
+		domainDef2.setLineWrap(false);
 	}
 	private Font monoSpaceFont = Font.decode("Monospaced-12");
 	private BufferedImage tmpImage = null;

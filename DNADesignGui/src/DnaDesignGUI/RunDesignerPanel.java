@@ -2,29 +2,135 @@ package DnaDesignGUI;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.OverlayLayout;
 
 import DnaDesign.DDSeqDesigner;
+import DnaDesign.DesignerOptions;
+import DnaDesign.DDSeqDesigner.SeqDesignerOption;
 
 public class RunDesignerPanel {
 	
 	public RunDesignerPanel(ModalizableComponent mc, final DDSeqDesigner cDesign, Font monoSpaceFont, final DesignerVisualGraph showGraph){
 		final JTextArea outputText = new JTextArea("No output. First begin the designer, and then press the button again to show an intermediate result.");
+		final JScrollPane showText = new JScrollPane(outputText);
+		final JPanel showOptions = new JPanel();
+
+		final JButton actionOnRunningDesigner = new JButton();
+		showOptions.setLayout(new BorderLayout());
+		{
+			Box showOptionsBox = Box.createVerticalBox();
+			DesignerOptions options = cDesign.getOptions();
+			for(final SeqDesignerOption option : options.options){
+				JLabel label = new JLabel();
+				label.setText(option.getDescription());
+				if (option instanceof SeqDesignerOption.Boolean){
+					//Add a new toggle
+					final JCheckBox toggle = new JCheckBox();
+					Box horiz = Box.createHorizontalBox();
+					horiz.add(toggle);
+					horiz.add(label);
+					horiz.add(Box.createHorizontalGlue());
+					showOptionsBox.add(horiz);
+					label.setLabelFor(toggle);
+					final SeqDesignerOption.Boolean bOption = (SeqDesignerOption.Boolean) option;
+					toggle.setSelected(bOption.getState());
+					toggle.addActionListener(new ActionListener(){
+						public void actionPerformed(ActionEvent e) {
+							bOption.toggle();
+							toggle.setSelected(bOption.getState());
+						}
+					});
+					actionOnRunningDesigner.addActionListener(new ActionListener(){
+						public void actionPerformed(ActionEvent e) {
+							toggle.setEnabled(!cDesign.isRunning());
+						}
+					});
+				} else if (option instanceof SeqDesignerOption.Double || option instanceof SeqDesignerOption.Integer){
+					final SeqDesignerOption.Double dOption;
+					final SeqDesignerOption.Integer iOption;
+					if (!(option instanceof SeqDesignerOption.Integer)){
+						dOption = (SeqDesignerOption.Double) option;
+						iOption = null;
+					} else{
+						iOption = (SeqDesignerOption.Integer) option;
+						dOption = null;
+					}
+					//Add a value field
+					final JTextField jta = new JTextField(12);
+					jta.setMaximumSize(new Dimension(200,23));
+					final String defaultDedicateText = "Go";
+					final JButton dedicate = new JButton(defaultDedicateText);
+					if (dOption!=null){
+						jta.setText(dOption.getState()+"");
+					} else {
+						jta.setText(iOption.getState()+"");
+					}
+					dedicate.setPreferredSize(new Dimension(70,23));
+					dedicate.addActionListener(new ActionListener(){
+						public void actionPerformed(ActionEvent f) {
+							try {
+								if (dOption!=null){
+									dOption.setState(new Double(jta.getText()));
+								} else {
+									iOption.setState(new Integer(jta.getText()));
+								}
+							} catch (Throwable e){
+								dedicate.setText("ERR.");
+								new Thread(){
+									public void run(){
+										try {
+											Thread.sleep(500);
+										} catch (InterruptedException e) {
+											e.printStackTrace();
+										}
+										dedicate.setText(defaultDedicateText);
+									}
+								}.start();
+							}
+						}
+					});
+					actionOnRunningDesigner.addActionListener(new ActionListener(){
+						public void actionPerformed(ActionEvent e) {
+							dedicate.setEnabled(!cDesign.isRunning());
+						}
+					});
+					Box horiz = Box.createHorizontalBox();
+					horiz.add(jta);
+					horiz.add(dedicate);
+					horiz.add(label);
+					horiz.add(Box.createHorizontalGlue());
+					showOptionsBox.add(horiz);
+				}
+			}
+			showOptionsBox.add(Box.createVerticalGlue());
+			showOptions.add(showOptionsBox);
+		}
+		
+		
 		final JButton resumeDesigner = new JButton("Resume Designer"){
 			private boolean designerRunning = false, designerFinished1 = false;
 			private void setDesignerRunning(double i) {
-				setText("Designer Running (Click to get Intermediate Result.) Score: "+String.format("%.2f",i));
+				String append = "Designer Running (Click to get Intermediate Result.)";
+				if(cDesign.getIterationCount()>0){
+					append += "Score: "+String.format("%.2f",i)+" Iterations: "+cDesign.getIterationCount();
+				}
+				setText(append);
 			}
 			{
 				addActionListener(new ActionListener(){
@@ -35,6 +141,9 @@ public class RunDesignerPanel {
 							new Thread(){
 								public void run(){
 									cDesign.resume();
+									for(ActionListener al : actionOnRunningDesigner.getListeners(ActionListener.class)){
+										al.actionPerformed(null);
+									}
 									while(!cDesign.isFinished() && cDesign.isRunning()){
 										setDesignerRunning(cDesign.getBestScore());
 										try {
@@ -81,8 +190,13 @@ public class RunDesignerPanel {
 				addActionListener(new ActionListener(){
 					public void actionPerformed(ActionEvent e) {
 						showGraph.setVisible(false);
+						showText.setVisible(true);
+						showOptions.setVisible(false);
 						enableAllBut(allThree,0);
 						openModalDialog.validate();
+						for(ActionListener al : actionOnRunningDesigner.getListeners(ActionListener.class)){
+							al.actionPerformed(null);
+						}
 					}
 				});
 			}
@@ -93,7 +207,10 @@ public class RunDesignerPanel {
 					public void actionPerformed(ActionEvent e) {
 						showGraph.setVisible(true);
 						enableAllBut(allThree,1);
-						openModalDialog.validate();
+						openModalDialog.validate();									
+						for(ActionListener al : actionOnRunningDesigner.getListeners(ActionListener.class)){
+							al.actionPerformed(null);
+						}
 					}
 				});
 			}
@@ -103,8 +220,13 @@ public class RunDesignerPanel {
 				addActionListener(new ActionListener(){
 					public void actionPerformed(ActionEvent e) {
 						showGraph.setVisible(false);
+						showOptions.setVisible(true);
+						showText.setVisible(false);
 						enableAllBut(allThree,2);
 						openModalDialog.validate();
+						for(ActionListener al : actionOnRunningDesigner.getListeners(ActionListener.class)){
+							al.actionPerformed(null);
+						}
 					}
 				});
 			}
@@ -117,17 +239,17 @@ public class RunDesignerPanel {
 		buttons.add(resumeDesigner);
 		buttons.add(DisplayTabs);
 		openModalDialog.add(buttons,BorderLayout.NORTH);
-		final JScrollPane holder = new JScrollPane(outputText);
 		
 		final JLayeredPane jlayers = new JLayeredPane();
 		jlayers.setLayout(new OverlayLayout(jlayers));
-		jlayers.add(holder,JLayeredPane.DEFAULT_LAYER);
+		jlayers.add(showText,JLayeredPane.DEFAULT_LAYER);
+		jlayers.add(showOptions,JLayeredPane.MODAL_LAYER);
 		openModalDialog.add(jlayers, BorderLayout.CENTER);
 		final ScaleUtils su = new ScaleUtils();
 		//su.addPreferredSize(resumeDesigner, 0, 0, 200, 40);
 		//su.addPreferredSize(ToggleVisualDisplay, 0, 0, 200, 40);
 		su.addPreferredSize(buttons,1f,.1f,0,0);
-		su.addPreferredSize(holder,1f,.9f, 0,0);
+		su.addPreferredSize(showText,1f,.9f, 0,0);
 		//su.addPreferredSize(outputText, 1f, 1f, 0, -50);
 		
 		mc.addModalScale(new Runnable(){
@@ -136,7 +258,7 @@ public class RunDesignerPanel {
 				int h = openModalDialog.getPreferredSize().height;
 				su.pushSizes(w, h);
 
-				Component model = holder;
+				Component model = showText;
 				Point location = model.getLocation();
 				Component nextParent = model.getParent();
 				for(int i = 0; i < 4; i++){
