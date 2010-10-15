@@ -13,13 +13,13 @@ import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 
 public class ModalUtils {
-	public static JPanel openModalDialog(ModalizableComponent mc, final Font xfont) {
+	public static JPanel openModalDialog(DnaDesignGUI_ThemedApplet mc, final Font xfont) {
 		return openModalDialog(mc, xfont, new Runnable(){
 			public void run() {
 			}
 		});
 	}
-	public static JPanel openModalDialog(ModalizableComponent mc, final Font xfont, final Runnable runOnClose) {
+	public static JPanel openModalDialog(final DnaDesignGUI_ThemedApplet mc, final Font xfont, final Runnable runOnClose) {
 		final JPanel modalPanel = mc.getModalPanel();
 		modalPanel.removeAll();
 		final ScaleUtils su = new ScaleUtils();
@@ -62,7 +62,8 @@ public class ModalUtils {
 				});
 			}
 			public void paintComponent(Graphics g){
-				g.setColor(new Color(200,180,180));
+				g.setColor(mc.THEMECOL2);
+						//new Color(200,180,180));
 				g.fillRect(0,0,getWidth(),getHeight());
 				//Draw X at top.
 				if (mouseInsideX){

@@ -1,6 +1,5 @@
 package DnaDesignGUI;
 
-import java.applet.Applet;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -39,16 +38,23 @@ import DnaDesign.Exception.InvalidDNAMoleculeException;
 import DnaDesign.Exception.InvalidDomainDefsException;
 import DnaDesignGUI.DNAPreviewStrand.UpdateSuccessfulException;
 
-public class DnaDesignGui extends Applet implements ModalizableComponent, CaretListener{
+public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements ModalizableComponent, CaretListener{
 	public DnaDesignGui(){
 		su = new ScaleUtils();
+		/*
+		PlasticLookAndFeel.setPlasticTheme(new DesertRed());
+		try {
+			UIManager.setLookAndFeel(new PlasticXPLookAndFeel());
+		} catch (Exception e) {}
+		*/
 	}
 	ScaleUtils su;
 	private boolean started = false;
 	public void start(){
 		if(started) return;
-		started = true;
+		parseThemeColors();
 		setBackground(Color.white);
+		started = true;
 		new Thread(){
 			public void run(){
 				runStartRoutine();
@@ -64,8 +70,8 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 			}
 		};
 		bottomPanel.setOpaque(false);
-		JPanel leftPanel = new JPanel();
-		JPanel rightPanel = new JPanel();
+		JPanel leftPanel = skinPanel(new JPanel());
+		JPanel rightPanel = skinPanel(new JPanel());
 		leftPanel.setLayout(new FlowLayout(FlowLayout.LEFT,0,0));
 		rightPanel.setLayout(new FlowLayout(FlowLayout.LEFT,0,0));
 		float fractionLeftPanel = .6f;
@@ -157,13 +163,24 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 			e.printStackTrace();
 		}
 		{
-			JPanel RunDesignerBox = new JPanel();
+			JPanel RunDesignerBox = new JPanel(){
+				public Component add(Component comp) {
+					if (comp instanceof JButton){
+						ButtonSkin.process(DnaDesignGui.this,(JButton)comp);;
+					}
+					return super.add(comp);
+				}
+			};
 			RunDesignerBox.setOpaque(false);
 			RunDesignerBox.setLayout(new GridLayout(0,1));
 			JButton GoToDesigner = new JButton("Open Designer"){
 				{
 					addActionListener(new ActionListener(){
 						public void actionPerformed(ActionEvent f) {
+							if (getModalPanel()==null){ return;}
+							if (getModalPanel().getComponentCount() > 0){
+								return;
+							}
 							try {
 								createNewDesigner();
 							} catch (Throwable e){
@@ -262,12 +279,11 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 					g.fillRect(0,0,getWidth()-2,getHeight());
 				}
 				{
-					setBackground(Color.white);
 					setOpaque(true);
 					setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
 				}
 			};
-			PreviewSeqs = new DNAPreviewStrand(){
+			PreviewSeqs = new DNAPreviewStrand(this){
 				public void draw(){
 					if(modalPanel!=null && PreviewSeqs!=null){
 						if (modalPanel.getComponentCount()==0){
@@ -348,8 +364,6 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 		
 		validate();
 	}
-	
-	
 	private static String toHexCol(float[] g) {
 		return String.format("#%02x%02x%02x",(int)g[0],(int)g[1],(int)g[2]);
 	}
@@ -360,6 +374,7 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 		domainDef2.addCaretListener(this);
 		domainDef2.setWrapStyleWord(false);
 		domainDef2.setLineWrap(false);
+		domainDef2.setBackground(Color.WHITE);
 	}
 	private Font monoSpaceFont = Font.decode("Monospaced-12");
 	private BufferedImage tmpImage = null;
@@ -393,38 +408,10 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 		}
 		super.invalidate();
 	}
-	private JComponent skinGroup(final Component inner, String string) {
-		JComponent inner2 = new JPanel(){
-			{
-				setOpaque(false);
-				setLayout(new BorderLayout());
-				add(inner, BorderLayout.CENTER);
-			}
-		    protected void paintComponent(Graphics g) {
-		        int width = getWidth();
-		        int height = getHeight();
 
-				((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, // Anti-alias!
-				        RenderingHints.VALUE_ANTIALIAS_ON);
-		        // Paint a rounded rectangle in the background.
-		        g.setColor(Color.white);
-		        int round = 15;
-		        int topY = 1;
-		        g.fillRoundRect(1, topY, width-3, height-topY-1, round,round);
-		        g.setColor(Color.black);
-		        g.drawRoundRect(1, topY, width-3, height-topY-1, round,round);
-		        super.paintComponent(g);
-		    }
-		};
-		inner2.setBorder(BorderFactory.createTitledBorder(
-				BorderFactory.createEmptyBorder(),
-				string,
-				TitledBorder.LEFT,
-				TitledBorder.BELOW_TOP));
-		return inner2;
-	}
 	private JTextArea DomainDef, Molecules, ErrorsOutText;
 	private String DomainDef_CLine="", Molecules_CLine="";
+	private int Molecules_CLine_num;
 	private DNAPreviewStrand PreviewSeqs;
 	private DesignerVisualGraph PreviewGraph;
 	private JPanel PreviewSeqsProxy;
@@ -475,21 +462,15 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 		if (e.getSource()==DomainDef){
 			DomainDef_CLine = lines[countLine];
 		} else {
+			Molecules_CLine_num = countLine;
 			Molecules_CLine = lines[countLine];
 		}
 		updatePreview();
 	}
 	private void updatePreview(){
 		try {
-			String[] cline = Molecules_CLine.trim().split("\\s+");
-			String subCline = "";
-			if (cline.length == 0 || cline[0].length()==0){
-				return;
-			}
-			if (cline.length >= 2){
-				subCline = cline[1];
-			}
-			PreviewSeqs.setCurrentPreviewMolecule(subCline, DomainDef.getText());
+			int numMolecules = Molecules.getLineCount();
+			PreviewSeqs.setCurrentPreviewMolecule(Molecules_CLine_num, numMolecules, Molecules_CLine.trim(), DomainDef.getText());
 		} catch (InvalidDNAMoleculeException e){
 			reportError(e.getMessage(), Molecules);
 		} catch (InvalidDomainDefsException e){
@@ -537,7 +518,7 @@ public class DnaDesignGui extends Applet implements ModalizableComponent, CaretL
 			if (blink){
 				onBlink.setBorder(new MarginBorder());
 			} else {
-				onBlink.setBorder(BorderFactory.createEtchedBorder(new Color(100,100,100),new Color(240,240,255)));
+				onBlink.setBorder(BorderFactory.createEtchedBorder(THEMECOL0,THEMECOL1));
 			}
 		}
 	};{

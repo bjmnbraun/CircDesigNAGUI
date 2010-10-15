@@ -20,6 +20,7 @@ if(max==null || property==null) {
 	<property name="DeploymentJarMatches" value="DnaDesignerGui" />
 	<property name="DeploymentName" value="${DeploymentJarMatches}${Disambiguator}" />
 	<property name="p5Main" value="DnaDesignGUI.DnaDesignGui" />
+	<property name="p5Main2" value="DnaDesignGUI.FoldingImplTestGui" />
 	<!-- Path to the actual DNADesign package. -->
 	<property name="DnaDesignPath" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\DNADesign\DNADesign" />
 	
@@ -189,15 +190,18 @@ if(max==null || property==null) {
 			<fileset dir="${dataDir_local}/web" includes="*.html,*.jnlp" />
 		</copy>
 		<!-- replace the {CLASSNAME} with our applet -->
-		<srchreplace srcfile="${basedir}/web_template.html" destfile="${basedir}/web_template2.html" srch="{CLASSNAME}" rep="${p5Main}" deletesrch="true"/>
-		<srchreplace srcfile="${basedir}/web_template2.html" destfile="${basedir}/web_template3.html" srch="{APPLETWIDTH}" rep="640" deletesrch="true" />
+		<srchreplace srcfile="${basedir}/web_template.html" destfile="${basedir}/web_template3.html" srch="{APPLETWIDTH}" rep="640" deletesrch="true" />
 		<srchreplace srcfile="${basedir}/web_template3.html" destfile="${basedir}/web_template4.html" srch="{APPLETHEIGHT}" rep="480" deletesrch="true" />
-		<srchreplace srcfile="${basedir}/web_template4.html" destfile="${basedir}/web_templatefinal.html" srch="{DESTINATION_URL_DIR}" rep="${deploypath}" deletesrch="true" />
-		<!-- {CLASSLIBJAR} needs to become our outjar name. Put in /web/index.html -->
-		<srchreplace srcfile="${basedir}/web_templatefinal.html" destfile="${basedir}/index2.html" srch="{CLASSLIBJAR}" rep="${webjar},DnaDesign.jar" deletesrch="true" />
+		<srchreplace srcfile="${basedir}/web_template4.html" destfile="${basedir}/web_template5.html" srch="{DESTINATION_URL_DIR}" rep="${deploypath}" deletesrch="true" />
+		<srchreplace srcfile="${basedir}/web_template5.html" destfile="${basedir}/web_template6.html" srch="{CLASSLIBJAR}" rep="${webjar},DnaDesign.jar" deletesrch="true" />
+		<srchreplace srcfile="${basedir}/web_template6.html" destfile="${basedir}/index2.html" srch="{CLASSNAME}" rep="${p5Main}" deletesrch="false"/>
+		<srchreplace srcfile="${basedir}/web_template6.html" destfile="${basedir}/index3.html" srch="{CLASSNAME}" rep="${p5Main2}" deletesrch="true" />
 		<move todir="${basedir}/web">
 			<fileset dir="." includes="*.html,*.jnlp" />
 		</move>
+		<copy todir="${basedir}/web">
+			<fileset dir="${dataDir_local}/web" includes="*.png,*.svg" />
+		</copy>
 	</target>
 
 </project>

@@ -9,12 +9,15 @@ import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.TreeMap;
 
 import processing.core.PApplet;
 import processing.core.PFont;
 import DnaDesign.DomainStructureData;
 import DnaDesign.DomainStructureData.DomainStructure;
 import DnaDesign.DomainStructureData.HairpinStem;
+import DnaDesign.DomainStructureData.SingleStranded;
 import DnaDesign.Exception.InvalidDNAMoleculeException;
 import DnaDesign.Exception.InvalidDomainDefsException;
 
@@ -23,6 +26,45 @@ import DnaDesign.Exception.InvalidDomainDefsException;
  * @author Benjamin
  */
 public class DNAPreviewStrand extends PApplet{
+	public DNAPreviewStrand(DnaDesignGUI_ThemedApplet mc) {
+		this.mc = mc;
+	}
+	private DnaDesignGUI_ThemedApplet mc;
+	private ScaleFactors<float[]> moleculeScales = new ScaleFactors<float[]>();
+	private Object makeMolecularScale(){
+		return new float[]{-1,-1};
+	}
+	private void invalidateMoleculeScale(Object entrygeneric) {
+		float[] object = (float[])(entrygeneric);
+		Arrays.fill(object,-1);
+	}
+	private class ScaleFactors<T> {
+		public void invalidateAbove(int size){
+			while(scaleFactors.lastKey() > size){
+				scaleFactors.remove(scaleFactors.lastKey());
+			}
+		}
+		public void setCurrentEntryAndInvalidate(int entry){
+			currentEntry = entry;
+			invalidateMoleculeScale(getCurrentEntry());
+		}
+		private int currentEntry;
+		public T getCurrentEntry(){
+			return getEntry(currentEntry);
+		}
+		public T getEntry(int id){
+			T res = scaleFactors.get(id);
+			if (res==null){
+				res = (T) makeMolecularScale();
+				scaleFactors.put(id,res);
+			}
+			return res;
+		}
+		private TreeMap<Integer, T> scaleFactors = new TreeMap();
+		public Collection<T> getEntries() {
+			return scaleFactors.values();
+		}
+	}
 	public void setup(){
 		String wP = null, hP = null;
 		try {
@@ -52,12 +94,20 @@ public class DNAPreviewStrand extends PApplet{
 	}
 	/**
 	 * Just the part that looks like "[3*.|2*.|1*.}
+	 * @param molecules_CLine_num 
 	 */
-	public void setCurrentPreviewMolecule(String moleculeDescription, String domainDefs){
+	public void setCurrentPreviewMolecule(int molecules_CLine_num, int numMolecules, String moleculeDescription, String domainDefs){
 		needsCurrentMoleculeUpdate = (
 				!currentMoleculeString.equals(moleculeDescription) ||
 				!domainDefsBlock.equals(domainDefs));
-		currentMoleculeString = moleculeDescription;
+		String[] split = moleculeDescription.split("\\s+");
+		if (split.length<2){
+			throw new InvalidDNAMoleculeException("Correct molecule format: <name> <molecule>",0);
+		}
+		currentMoleculeName = split[0];
+		currentMoleculeString = split[1];
+		moleculeScales.setCurrentEntryAndInvalidate(molecules_CLine_num);
+		moleculeScales.invalidateAbove(numMolecules);
 		domainDefsBlock = domainDefs;
 		screen1.preview.updateMolecule();
 	}
@@ -87,7 +137,7 @@ public class DNAPreviewStrand extends PApplet{
 		;
 		
 	}
-	private String currentMoleculeString = "";
+	private String currentMoleculeString = "", currentMoleculeName="";
 	private String domainDefsBlock = "";
 	private boolean needsCurrentMoleculeUpdate = true, needsSnapshot = false;
 	private String snapshotPath = null;
@@ -107,7 +157,7 @@ public class DNAPreviewStrand extends PApplet{
 			ff = createFont("Arial", 24);
 		}
 		private PFont ff;
-		private float moleculeScale = 1f, moleculeScaleMax = 1f;
+		private float moleculeScale = 1f, moleculeScaleMax = 1f, moleculeScale_override = -1;
 		public class DnaSequencePreview {
 			public void updateMolecule(){
 				if (needsCurrentMoleculeUpdate){
@@ -124,7 +174,7 @@ public class DNAPreviewStrand extends PApplet{
 							throw new InvalidDomainDefsException(e.getMessage());
 						}
 						try {
-							DomainStructureData.readStructure("preview", currentMoleculeString, dsd);
+							DomainStructureData.readStructure(currentMoleculeName, currentMoleculeString, dsd);
 						} catch (Throwable e){
 							//e.printStackTrace();
 							throw new InvalidDNAMoleculeException(e.getMessage(),0);
@@ -182,6 +232,8 @@ public class DNAPreviewStrand extends PApplet{
 				for(int k = 0; k < particlepoints; k++){
 					particlepositions[k][0] -= avgx;
 					particlepositions[k][1] -= avgy;
+					//Rotate in counterrotation:
+					rotateVec(particlepositions[k],longestHairpin_counterrotation);
 					maxX = max(maxX,abs(particlepositions[k][0])*2*sqrt(2));
 					maxY = max(maxY,abs(particlepositions[k][1])*2*sqrt(2));
 					if (!hasInitialParticleConfiguration){
@@ -198,16 +250,21 @@ public class DNAPreviewStrand extends PApplet{
 					q[2]+=onek1*twok0;
 					q[3]+=onek1*twok1;
 				}
-				float theta = atan2((q[1]-q[2]),(q[0]+q[3]));
+				float theta = atan2((q[1]-q[2]),(q[0]+q[3]))+longestHairpin_counterrotation;
 				if (!hasInitialParticleConfiguration){
 					moleculeScaleMax = 1f/(max(maxX,maxY)+.03f);
 					//System.out.println(maxX);
 					moleculeScale = moleculeScaleMax;
 				}
+				moleculeScales.getCurrentEntry()[0] = moleculeScale;
 				pushMatrix();
 				translate(.5f,.5f);
 				translate(previewAreaDrag[6], previewAreaDrag[7]);
-				scale(moleculeScale);
+				if (moleculeScale_override>0){
+					scale(moleculeScale_override);
+				} else {
+					scale(moleculeScale);
+				}
 				rotate(theta);
 				translate(-avgx,-avgy);
 				drawMolecule(true);
@@ -217,25 +274,34 @@ public class DNAPreviewStrand extends PApplet{
 			private int moleculeNumSubStructures = 0;
 			private float[] averagePositions = new float[4];
 			private float[][] particlepositions = new float[moleculeNumSubStructures][0];
+			private int longestHairpin = -1;
+			private float longestHairpin_counterrotation = 0;
 			private boolean hasInitialParticleConfiguration = false;
 			private int particlepoints = 0;
 			private void drawMolecule(boolean actuallyDraw){
-				pushMatrix();
+				pushMatrix_drawMolecule();
+				longestHairpin = -1;
+				longestHairpin_counterrotation = 0; //Stays 0 unless a helix is found.
 				try {
+					boolean wasSS = true;
 					for(DomainStructure ds : dsd.structures){
-						drawStructure(ds, actuallyDraw, -1, false);
+						drawStructure(ds, actuallyDraw, -1, 0, wasSS);
+						wasSS = ds instanceof SingleStranded;
 					}
 				} catch (Throwable e){
-					e.printStackTrace();
+					//e.printStackTrace();
 				} finally {
-					popMatrix();
+					popMatrix_drawMolecule_full();
 				}
 			}
-			private void drawStructure(DomainStructure ds, boolean trueDraw, int hairpinSize, boolean inShaft){
-				if (inShaft && !(ds instanceof HairpinStem)){
+			private void drawStructure(DomainStructure ds, boolean trueDraw, int hairpinSize, int shaftLength, boolean lastWasSS){
+				if (shaftLength>0 && !(ds instanceof HairpinStem)){
 					throw new RuntimeException("Assertion error: inShaft only valid for continuing hairpinstems");
 				}
-				float wiggleTheta = sin(frameCount/120f*(1+ds.random0*.3f)+ds.random0*TWO_PI)*.3f;
+				//TODO: button to turn this on / off
+				boolean dynamicWiggle = false;
+				float wiggleTheta = !dynamicWiggle?PI/4:sin(frameCount/120f*(1+ds.random0*.3f)+ds.random0*TWO_PI)*.3f; 
+				wiggleTheta = (!lastWasSS || (ds instanceof HairpinStem))?wiggleTheta:0;
 				float eW = .03f;
 				float openingSize = 2f;
 				//Additional space to put on the ring, due to the opening of the loop.
@@ -252,12 +318,12 @@ public class DNAPreviewStrand extends PApplet{
 						int seqLen = dsd.domainLengths[domain & DNA_SEQ_FLAGSINVERSE];
 						for(int k = 0; k < seqLen; k++){
 							if (k == (seqLen-1) / 2){
-								pushMatrix();
+								pushMatrix_drawMolecule();
 								try {
 									translate(seqLen%2==0?eW:0,0);
 									markDomain(dsd.getDomainName(domain),seqLen/2f*eW,trueDraw);
 								} finally {
-									popMatrix();
+									popMatrix_drawMolecule();
 								}
 							}
 							if (trueDraw){
@@ -272,11 +338,11 @@ public class DNAPreviewStrand extends PApplet{
 					if (hairpinSize!=-1){
 						rotate(TWO_PI/(hairpinSize+ringAdd)*(openingSize));
 					} else {
-						if (!inShaft)
+						if (shaftLength==0)
 							rotate(wiggleTheta);
 					}
-					pushMatrix();
-					if (!inShaft){
+					pushMatrix_drawMolecule();
+					if (shaftLength==0){
 						translate(eW*openingSize/2,0); //Size of opening.
 						rotate(-HALF_PI);
 					}
@@ -287,7 +353,7 @@ public class DNAPreviewStrand extends PApplet{
 					int seqLen = dsd.domainLengths[domain & DNA_SEQ_FLAGSINVERSE];
 					for(int k = 0; k < seqLen; k++){
 						if (k == (seqLen-1) / 2){
-							pushMatrix();
+							pushMatrix_drawMolecule();
 							try {
 								translate(seqLen%2==0?eW:0,0);
 								translate(0,-eW*openingSize/2);
@@ -296,7 +362,7 @@ public class DNAPreviewStrand extends PApplet{
 								rotate(PI);
 								markDomain(dsd.getDomainName(domain2),seqLen/2f*eW,trueDraw);
 							} finally {
-								popMatrix();
+								popMatrix_drawMolecule();
 							}
 						}
 						if (trueDraw){
@@ -310,6 +376,11 @@ public class DNAPreviewStrand extends PApplet{
 					}
 					//Do we begin a loop?
 					boolean inShaft2 = false;
+					int newShaftLength = shaftLength + seqLen;
+					if (newShaftLength>longestHairpin){
+						longestHairpin = newShaftLength;
+						longestHairpin_counterrotation = getCounterRotation();
+					}
 					if (hs.subStructure.size()>0){
 						DomainStructure domainStructure = hs.subStructure.get(0);
 						inShaft2 = domainStructure instanceof HairpinStem;
@@ -326,36 +397,36 @@ public class DNAPreviewStrand extends PApplet{
 							//Recurse through closed loop
 							for(int k = 0; k < hs.subStructure.size(); k++){
 								DomainStructure domainStructure = hs.subStructure.get(k);
-								drawStructure(domainStructure,trueDraw,hs.innerCurveCircumference, inShaft2);	
+								drawStructure(domainStructure,trueDraw,hs.innerCurveCircumference, 0, false);	
 							}
 						} else {
 							//Broken loop. Render the right, then the left (stack)
 							translate(0,-eW*openingSize);
 							rotate(-HALF_PI);
-							pushMatrix();
+							pushMatrix_drawMolecule();
 							{
 								rotate(PI);
 								translate(eW*openingSize*2,0);
 								//Recurse through left
 								for(int k = hs.leftRightBreak+1; k < hs.subStructure.size(); k++){
 									DomainStructure domainStructure = hs.subStructure.get(k);
-									drawStructure(domainStructure,trueDraw,-1, inShaft2);	
+									drawStructure(domainStructure,trueDraw,-1, 0, false);	
 								}
 							}
-							popMatrix();
+							popMatrix_drawMolecule();
 							for(int k = 0; k <= hs.leftRightBreak; k++){
 								DomainStructure domainStructure = hs.subStructure.get(k);
-								drawStructure(domainStructure,trueDraw,-1, inShaft2);	
+								drawStructure(domainStructure,trueDraw,-1, 0, false);	
 							}
 						}
 					} else {
 						//Recurse up shaft
 						for(int k = 0; k < hs.subStructure.size(); k++){
 							DomainStructure domainStructure = hs.subStructure.get(k);
-							drawStructure(domainStructure,trueDraw,hs.innerCurveCircumference, inShaft2);	
+							drawStructure(domainStructure,trueDraw,hs.innerCurveCircumference, newShaftLength, false);	
 						}
 					}
-					popMatrix();
+					popMatrix_drawMolecule();
 					translate(eW*openingSize,0); //Size of opening.
 					/*
 					if (hairpinSize!=-1){
@@ -411,6 +482,7 @@ public class DNAPreviewStrand extends PApplet{
 				ellipseMode(CORNERS);
 				ellipse(-eW*.9f,-eW*.9f,eW*2*.9f,eW*2*.9f);
 			}
+			private float[] sharedMarkDomain = new float[16];
 			private void markDomain(String domainName, float spacing, boolean trueDraw) {
 				textFont(ff);
 				if (!trueDraw){
@@ -423,12 +495,25 @@ public class DNAPreviewStrand extends PApplet{
 				}
 				pushMatrix();
 				fill(0);
-				translate(0,-.03f);
+				translate(0,-.1f);
 				scale(1f/200);
-				textAlign(CENTER,BOTTOM);
+				textAlign(CENTER,CENTER);
+				//YAY Linear algebra. Reverse engineer our current rotation.
+				rotate(getCounterRotation());
 				text(domainName, 0, 0);
 				popMatrix();
 			}
+		}
+		private float getCounterRotation(){
+			float av1minav0x = screenX(1,0)-screenX(0,1);
+			float av1minav0y = screenY(1,0)-screenY(0,1);
+			return -(atan2(av1minav0y,av1minav0x)+PI/4);
+		}
+		private void rotateVec(float[] vec2, float t){
+			float nx = cos(t)*vec2[0]-sin(t)*vec2[1];
+			float ny = sin(t)*vec2[0]+cos(t)*vec2[1];
+			vec2[0] = nx;
+			vec2[1] = ny;
 		}
 		//Viewports broken for now.
 		private Rectangle2D.Float previewArea = new Rectangle2D.Float(0,0,1,1);
@@ -477,6 +562,7 @@ public class DNAPreviewStrand extends PApplet{
 			pushMatrix();
 			strokeWeight(2);
 			boolean isSnapshotting = false;
+			moleculeScale_override = -1;
 			if (needsSnapshot){
 				isSnapshotting = true;
 				File temp;
@@ -486,13 +572,34 @@ public class DNAPreviewStrand extends PApplet{
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+				pushMatrix();
+				float maxScale = 0, minScale = Float.MAX_VALUE; //greater than -1
+				for(float[] k : moleculeScales.getEntries()){
+					if (k[0] > 0){
+						minScale = Math.min(maxScale,k[0]);
+					}
+					maxScale = Math.max(maxScale,k[0]);
+				}
+				if (maxScale!=0){ //This should always happen, but race conditions can screw up
+					moleculeScale_override = minScale;
+				}
 				strokeWeight(2f/width);
+				
 			}
+			pushMatrix();
 			scale(width,height);
 			//Draw current selected sequence?
 			drawPreviewSequence();
+			popMatrix();
 			//Sequence select wheel (click or use arrow keys to slide up / down)
 			if (isSnapshotting){
+				popMatrix();
+				if (true){
+					fill(0);
+					textFont(ff);
+					textAlign(LEFT,TOP);
+					text(currentMoleculeName,2,1);
+				}
 				endRecord();
 				needsSnapshot = false;
 			}
@@ -503,8 +610,22 @@ public class DNAPreviewStrand extends PApplet{
 			preview.draw();
 			popMatrix();
 		}
+		private int drawMoleculePush = 0;
+		private void pushMatrix_drawMolecule(){
+			drawMoleculePush++;
+			pushMatrix();
+		}
+		private void popMatrix_drawMolecule(){
+			drawMoleculePush--;
+			popMatrix();
+		}
+		private void popMatrix_drawMolecule_full(){
+			while(drawMoleculePush>0){
+				popMatrix_drawMolecule();
+			}
+		}
 		public void drawGrid(){
-			stroke(0,125,40);
+			stroke(mc.THEMECOL4.getRGB());
 			strokeWeight(1);
 			float gridW = 2f;
 			float gridH = 2f;

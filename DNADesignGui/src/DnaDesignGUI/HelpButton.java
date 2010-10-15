@@ -21,7 +21,7 @@ import javax.swing.JPanel;
 
 public class HelpButton extends JButton implements MouseListener{
 	private String msg,header;
-	private ModalizableComponent mc;
+	private DnaDesignGUI_ThemedApplet mc;
 	private Component repainter;
 	public void repaint(){
 		if (mc==null || mc.getModalPanel()==null){ super.repaint(); return;}
@@ -36,7 +36,7 @@ public class HelpButton extends JButton implements MouseListener{
 	static {
 		f = Font.decode("Monospaced-12");
 	}
-	public HelpButton(String string2, String string, ModalizableComponent mc, Component repainter){
+	public HelpButton(String string2, String string, DnaDesignGUI_ThemedApplet mc, Component repainter){
 		this.mc = mc;
 		this.repainter = repainter;
 		this.msg = string;
@@ -53,7 +53,7 @@ public class HelpButton extends JButton implements MouseListener{
 	private int mouseOverAlpha = 0;
 	public void paintComponent(Graphics g){
 		//mouseMoved(ms.getMouse());
-		g.setColor(new Color(100,150,250));
+		g.setColor(new Color(100,140,200));
 		int yoff = 0;
 		((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, // Anti-alias!
 		        RenderingHints.VALUE_ANTIALIAS_ON);

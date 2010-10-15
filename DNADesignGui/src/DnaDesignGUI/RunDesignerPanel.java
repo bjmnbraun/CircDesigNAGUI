@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -25,15 +26,20 @@ import DnaDesign.DesignerOptions;
 import DnaDesign.DDSeqDesigner.SeqDesignerOption;
 
 public class RunDesignerPanel {
-	
-	public RunDesignerPanel(ModalizableComponent mc, final DDSeqDesigner cDesign, Font monoSpaceFont, final DesignerVisualGraph showGraph){
+	private DnaDesignGUI_ThemedApplet mc;
+	public JButton skinButton(JButton jb){
+		ButtonSkin.process(mc, jb);
+		return jb;
+	}
+	public RunDesignerPanel(DnaDesignGUI_ThemedApplet mc, final DDSeqDesigner cDesign, Font monoSpaceFont, final DesignerVisualGraph showGraph){
 		final JTextArea outputText = new JTextArea("No output. First begin the designer, and then press the button again to show an intermediate result.");
 		final JScrollPane showText = new JScrollPane(outputText);
 		final JPanel showOptions = new JPanel();
-
+		this.mc = mc;
 		final JButton actionOnRunningDesigner = new JButton();
 		showOptions.setLayout(new BorderLayout());
 		{
+			showOptions.setBackground(mc.THEMECOL1);
 			Box showOptionsBox = Box.createVerticalBox();
 			DesignerOptions options = cDesign.getOptions();
 			for(final SeqDesignerOption option : options.options){
@@ -42,6 +48,7 @@ public class RunDesignerPanel {
 				if (option instanceof SeqDesignerOption.Boolean){
 					//Add a new toggle
 					final JCheckBox toggle = new JCheckBox();
+					toggle.setOpaque(false);
 					Box horiz = Box.createHorizontalBox();
 					horiz.add(toggle);
 					horiz.add(label);
@@ -123,7 +130,7 @@ public class RunDesignerPanel {
 		}
 		
 		
-		final JButton resumeDesigner = new JButton("Resume Designer"){
+		final JButton resumeDesigner = skinButton(new JButton("Resume Designer"){
 			private boolean designerRunning = false, designerFinished1 = false;
 			private void setDesignerRunning(double i) {
 				String append = "Designer Running (Click to get Intermediate Result.)";
@@ -172,7 +179,7 @@ public class RunDesignerPanel {
 					}
 				});
 			}		
-		};
+		});
 		
 		final JPanel openModalDialog = ModalUtils.openModalDialog(mc,monoSpaceFont, new Runnable(){;
 		public void run(){
@@ -185,7 +192,7 @@ public class RunDesignerPanel {
 		DisplayTabs.setLayout(new GridLayout(0,3));
 		JButton GoToVisualDisplay,GoToGraphDisplay,GoToOptions;
 		final JButton[] allThree = new JButton[3];
-		DisplayTabs.add(allThree[0] = GoToVisualDisplay = new JButton("Text Output"){
+		DisplayTabs.add(allThree[0] = GoToVisualDisplay = skinButton(new JButton("Text Output"){
 			{
 				addActionListener(new ActionListener(){
 					public void actionPerformed(ActionEvent e) {
@@ -200,8 +207,8 @@ public class RunDesignerPanel {
 					}
 				});
 			}
-		});
-		DisplayTabs.add(allThree[1] = GoToGraphDisplay = new JButton("Graph View"){
+		}));
+		DisplayTabs.add(allThree[1] = GoToGraphDisplay = skinButton(new JButton("Graph View"){
 			{
 				addActionListener(new ActionListener(){
 					public void actionPerformed(ActionEvent e) {
@@ -214,8 +221,8 @@ public class RunDesignerPanel {
 					}
 				});
 			}
-		});
-		DisplayTabs.add(allThree[2] = GoToOptions = new JButton("Options..."){
+		}));
+		DisplayTabs.add(allThree[2] = GoToOptions = skinButton(new JButton("Options..."){
 			{
 				addActionListener(new ActionListener(){
 					public void actionPerformed(ActionEvent e) {
@@ -230,7 +237,7 @@ public class RunDesignerPanel {
 					}
 				});
 			}
-		});
+		}));
 		outputText.setEditable(false);
 		
 		openModalDialog.setLayout(new BorderLayout());
@@ -268,10 +275,15 @@ public class RunDesignerPanel {
 						//System.out.println(location);
 					}
 				}			
-				showGraph.setBounds(location.x,location.y,model.getWidth(),model.getHeight());
+				Rectangle newBounds = new Rectangle(location.x,location.y,model.getWidth(),model.getHeight());
+				if (showGraph.getBounds().equals(newBounds)){
+					
+				} else {
+					showGraph.setBounds(newBounds);
+				}
 				//showGraph.setLocation(location.x,location.y);
 				//showGraph.setPreferredSize(new Dimension(holder.getWidth(),holder.getHeight()));
-				openModalDialog.validate();
+				//openModalDialog.validate();
 			}
 		});
 		showGraph.setDesigner(cDesign);
