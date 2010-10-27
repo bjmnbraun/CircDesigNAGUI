@@ -7,14 +7,13 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Point;
-import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -25,7 +24,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.OverlayLayout;
-import javax.swing.border.TitledBorder;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.plaf.basic.BasicBorders.MarginBorder;
@@ -300,18 +298,26 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 			DomainDefWithHelp.setOpaque(false);
 			DomainDefWithHelp.setLayout(new BorderLayout());
 			DomainDefWithHelp.add(PreviewSeqsProxy, BorderLayout.WEST);
+			String immcond = "Double line";
 			DomainDefWithHelp.add(new HelpButton("Preview Molecule",
 					"The base pairs in the visualization are colored according to constraints:<br>" +
 					"<ul>" +
-					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.G)+">G</font> (with black outline - base immutable)</li>" +
-					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.A)+">A</font> (with black outline - base immutable)</li>" +
-					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.T)+">T</font> (with black outline - base immutable)</li>" +
-					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.C)+">C</font> (with black outline - base immutable)</li>" +
-					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.D)+">D (isoC)</font> (with black outline - base immutable)</li>" +
-					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.H)+">H (isoG)</font> (with black outline - base immutable)</li>" +
-					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.P)+">P</font> (with black outline - base immutable)</li>" +
-					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.Z)+">Z</font> (with black outline - base immutable)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.G)+">G</font> ("+immcond+" - base immutable)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.A)+">A</font> ("+immcond+" - base immutable)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.T)+">T</font> ("+immcond+" - base immutable)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.C)+">C</font> ("+immcond+" - base immutable)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.D)+">D (isoC)</font> ("+immcond+" - base immutable)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.H)+">H (isoG)</font> ("+immcond+" - base immutable)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.P)+">P</font> ("+immcond+" - base immutable)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.Z)+">Z</font> ("+immcond+" - base immutable)</li>" +
 					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.NONE)+">-</font> (unconstrained)</li>" +
+					"</ul>" +
+					"<br>" +
+					"Hotkeys:<br>" +
+					"<ul>" +
+					"<li>Shift\"+\" - Zoom In" +
+					"<li>\"-\" - Zoom Out" +
+					"<li>\"d\" - Toggle line or bubble display" +
 					"</ul>",
 				this,this), BorderLayout.CENTER);
 			
@@ -449,9 +455,11 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 
 	public void caretUpdate(CaretEvent e) {
 		int wise = e.getDot();
-		String[] lines = ((JTextComponent)e.getSource()).getText().split("\n");
+		Scanner lines = new Scanner(((JTextComponent)e.getSource()).getText());
 		int countLine = 0, countLineTotal = 0;
-		for(String q : lines){
+		String q = "";
+		while(lines.hasNextLine()){
+			q = lines.nextLine();
 			countLineTotal += q.length()+1;
 			if (wise <= countLineTotal){
 				break;
@@ -460,10 +468,10 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 		}
 		//System.out.println(wise+" "+lines[countLine]);
 		if (e.getSource()==DomainDef){
-			DomainDef_CLine = lines[countLine];
+			DomainDef_CLine = q;
 		} else {
 			Molecules_CLine_num = countLine;
-			Molecules_CLine = lines[countLine];
+			Molecules_CLine = q;
 		}
 		updatePreview();
 	}
