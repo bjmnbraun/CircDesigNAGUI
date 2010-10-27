@@ -165,7 +165,7 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 			su.addPreferredSize(rightPanel, 1-leftProportion, 1f);	
 		}
 		mainPanel.add(leftPanel, BorderLayout.WEST);
-		mainPanel.add(rightPanel, BorderLayout.EAST);
+		mainPanel.add(rightPanel, BorderLayout.CENTER);
 		su.addPreferredSize(mainPanel, 1f, 1f);
 		setLayout(new OverlayLayout(this));
 		add(triangleApplet);
@@ -264,7 +264,11 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 	}
 	public void invalidate(){
 		//Good time as any.
-		su.pushSizes(getWidth(), getHeight());
+		int w = getWidth();
+		int h = getHeight();
+		float ar = 550f/480f;
+		w = (int) Math.min(w,h*ar);
+		su.pushSizes(w,h);
 		super.invalidate();
 	}
 	public void addModalScale(Runnable runnable) {

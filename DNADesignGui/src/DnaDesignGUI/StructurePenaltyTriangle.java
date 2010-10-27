@@ -85,6 +85,7 @@ public class StructurePenaltyTriangle extends PApplet{
 			}
 			int len1 = seq1.length(domain);
 			int len2 = seq2.length(domain);
+			scale((float)len2/Math.max(len2,len1),(float)len1/Math.max(len2,len1));
 			Rectangle2D.Float area = new Rectangle2D.Float(1f/len2,1f/len1,1-1f/len2,1-1f/len1);
 			//Draw axes.
 			{

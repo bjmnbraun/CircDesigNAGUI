@@ -297,7 +297,7 @@ public class DNAPreviewStrand extends PApplet{
 				try {
 					boolean wasSS = true;
 					for(DomainStructure ds : dsd.structures){
-						drawStructure(ds, actuallyDraw, -1, 0, wasSS);
+						drawStructure(ds, actuallyDraw, -1, 0, wasSS && !(ds instanceof HairpinStem));
 						wasSS = ds instanceof SingleStranded;
 					}
 				} catch (Throwable e){
@@ -312,16 +312,17 @@ public class DNAPreviewStrand extends PApplet{
 				}
 				//TODO: button to turn this on / off
 				float wiggleTheta = !dynamicWiggle?PI/4:sin(frameCount/120f*(1+ds.random0*.3f)+ds.random0*TWO_PI)*.3f; 
-				wiggleTheta = (!lastWasSS || (ds instanceof HairpinStem))?wiggleTheta:0;
+				wiggleTheta = lastWasSS?0:wiggleTheta;
 				float eW = .03f;
 				float openingSize = 2f;
 				//Additional space to put on the ring, due to the opening of the loop.
+				float deltaTheta = 0;
 				float ringAdd = openingSize/2;
+				if (hairpinSize!=-1){
+					deltaTheta = hairpinDeltaTheta(hairpinSize,ringAdd);
+				}
 				if (ds instanceof DomainStructureData.SingleStranded){
-					float deltaTheta = 0;
-					if (hairpinSize!=-1){
-						deltaTheta = TWO_PI/(hairpinSize+ringAdd);
-					} else {
+					if (hairpinSize==-1){ //Outer loop
 						rotate(wiggleTheta);
 					}
 					for(int p : ds.sequencePartsInvolved){
@@ -347,22 +348,39 @@ public class DNAPreviewStrand extends PApplet{
 					//END OF METHOD
 				} else if (ds instanceof DomainStructureData.HairpinStem){
 					DomainStructureData.HairpinStem hs = (DomainStructureData.HairpinStem)ds;
-					if (hairpinSize!=-1){
-						rotate(TWO_PI/(hairpinSize+ringAdd)*(openingSize));
-					} else {
-						if (shaftLength==0)
+
+					if (hairpinSize==-1){ //Outer loop
+						if (shaftLength==0) //First stem on outside loop
 							rotate(wiggleTheta);
 					}
-					translate(openingSize*eW/2,0); //Size of opening.
+					if (shaftLength==0){
+						translate(openingSize*eW/2,0); //Size of opening.
+					}
 					pushMatrix_drawMolecule();
 					if (shaftLength==0){
 						rotate(-HALF_PI);
 					}
+
 					//Draw the shaft.
 					int domain = dsd.domains[ds.sequencePartsInvolved[0]];
 					int domain2 = dsd.domains[ds.sequencePartsInvolved[1]];
 					//They better be the same lengths...
 					int seqLen = dsd.domainLengths[domain & DNA_SEQ_FLAGSINVERSE];
+
+					
+					//Do we begin a loop?
+					boolean inShaft2 = false;
+					int newShaftLength = shaftLength + seqLen;
+					if (newShaftLength>longestHairpin){
+						longestHairpin = newShaftLength;
+						longestHairpin_counterrotation = getCounterRotation();
+					}
+					if (hs.subStructure.size()>0){
+						DomainStructure domainStructure = hs.subStructure.get(0);
+						inShaft2 = domainStructure instanceof HairpinStem;
+						inShaft2 &= hs.subStructure.size()==1;
+					}
+										
 					for(int k = 0; k < seqLen; k++){
 						if (k == (seqLen-1) / 2){
 							pushMatrix_drawMolecule();
@@ -386,18 +404,6 @@ public class DNAPreviewStrand extends PApplet{
 						}
 						translate(eW*2, 0);
 					}
-					//Do we begin a loop?
-					boolean inShaft2 = false;
-					int newShaftLength = shaftLength + seqLen;
-					if (newShaftLength>longestHairpin){
-						longestHairpin = newShaftLength;
-						longestHairpin_counterrotation = getCounterRotation();
-					}
-					if (hs.subStructure.size()>0){
-						DomainStructure domainStructure = hs.subStructure.get(0);
-						inShaft2 = domainStructure instanceof HairpinStem;
-						inShaft2 &= hs.subStructure.size()==1;
-					}
 					if (!inShaft2){
 						boolean isClosedLoop = hs.leftRightBreak==-1;
 						if (isClosedLoop){
@@ -405,7 +411,7 @@ public class DNAPreviewStrand extends PApplet{
 							translate(0,-eW*openingSize/2);
 							rotate(-HALF_PI);
 							//Account for the opening
-							rotate(TWO_PI/(hs.innerCurveCircumference+ringAdd));
+							rotate(hairpinDeltaTheta(hs.innerCurveCircumference,ringAdd));
 							//Recurse through closed loop
 							for(int k = 0; k < hs.subStructure.size(); k++){
 								DomainStructure domainStructure = hs.subStructure.get(k);
@@ -415,19 +421,36 @@ public class DNAPreviewStrand extends PApplet{
 							//Broken loop. Render the right, then the left (stack)
 							translate(0,-eW*openingSize/2);
 							rotate(-HALF_PI);
-							pushMatrix_drawFlippedMolecule();
+							pushMatrix_drawMolecule();
 							{
+								rotate(PI);
 								translate(eW*openingSize,0);
-								//Recurse through left
-								for(int k = hs.leftRightBreak+1; k < hs.subStructure.size(); k++){
-									DomainStructure domainStructure = hs.subStructure.get(k);
-									drawStructure(domainStructure,trueDraw,-1, 0, false);	
+								rotate(-wiggleTheta);
+								int rightLoopSize = 0;
+								//Recurse through right
+								for(boolean getLengthPass : new boolean[]{true,false}){
+									for(int k = hs.leftRightBreak+1; k < hs.subStructure.size(); k++){
+										DomainStructure domainStructure = hs.subStructure.get(k);
+										if (getLengthPass){
+											rightLoopSize += DomainStructure.getOuterLevelSpace(domainStructure, dsd.domainLengths, dsd.domains);
+										} else {
+											//Use "lastwasSS" to get it oriented the right way on the way back
+											drawStructure(domainStructure,trueDraw,-1, 0, true);
+										}
+									}
+									if (getLengthPass){
+										//Ok. Translate us WAY out there, and then come back.
+										translate(eW*2*rightLoopSize,0);
+										rotate(PI);
+									}
 								}
 							}
 							popMatrix_drawMolecule();
+							//Recurse through left
+							rotate(wiggleTheta);
 							for(int k = 0; k <= hs.leftRightBreak; k++){
 								DomainStructure domainStructure = hs.subStructure.get(k);
-								drawStructure(domainStructure,trueDraw,-1, 0, false);	
+								drawStructure(domainStructure,trueDraw,-1, 0, true);	
 							}
 						}
 					} else {
@@ -439,6 +462,7 @@ public class DNAPreviewStrand extends PApplet{
 					}
 					popMatrix_drawMolecule();
 					translate(eW*openingSize/2,0); //Size of opening.
+					rotate(deltaTheta);
 					/*
 					if (hairpinSize!=-1){
 						rotate(TWO_PI/(hairpinSize+openingSize));
@@ -453,7 +477,15 @@ public class DNAPreviewStrand extends PApplet{
 						line(0,eW,eW,0);
 					}
 					markDomain("",eW/2,trueDraw);
+					//ew*4
+					translate(eW*2, 0);
+					rotate(deltaTheta);
+					translate(eW*2, 0);
+					rotate(deltaTheta);
 				}
+			}
+			private float hairpinDeltaTheta(int hairpinSize, float ringAdd) {
+				return TWO_PI/(hairpinSize+ringAdd);
 			}
 			private void drawBase(float eW, int domain, int k) {
 				boolean isComp = (domain & DNA_COMPLEMENT_FLAG)!=0;
