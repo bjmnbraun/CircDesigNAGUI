@@ -313,6 +313,7 @@ public class DNAPreviewStrand extends PApplet{
 				//TODO: button to turn this on / off
 				float wiggleTheta = !dynamicWiggle?PI/4:sin(frameCount/120f*(1+ds.random0*.3f)+ds.random0*TWO_PI)*.3f; 
 				wiggleTheta = lastWasSS?0:wiggleTheta;
+				float HairpinOpenAngle = HALF_PI-PI/8;
 				float eW = .03f;
 				float openingSize = 2f;
 				//Additional space to put on the ring, due to the opening of the loop.
@@ -425,7 +426,7 @@ public class DNAPreviewStrand extends PApplet{
 							{
 								rotate(PI);
 								translate(eW*openingSize,0);
-								rotate(-wiggleTheta);
+								rotate(-HairpinOpenAngle);
 								int rightLoopSize = 0;
 								//Recurse through right
 								for(boolean getLengthPass : new boolean[]{true,false}){
@@ -447,7 +448,7 @@ public class DNAPreviewStrand extends PApplet{
 							}
 							popMatrix_drawMolecule();
 							//Recurse through left
-							rotate(wiggleTheta);
+							rotate(HairpinOpenAngle);
 							for(int k = 0; k <= hs.leftRightBreak; k++){
 								DomainStructure domainStructure = hs.subStructure.get(k);
 								drawStructure(domainStructure,trueDraw,-1, 0, true);	
@@ -669,6 +670,7 @@ public class DNAPreviewStrand extends PApplet{
 				needsSnapshot = false;
 			}
 			popMatrix();
+			resetMatrix();
 		}
 		public void drawPreviewSequence(){
 			pushMatrix();

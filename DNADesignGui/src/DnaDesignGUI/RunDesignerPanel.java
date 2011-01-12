@@ -66,6 +66,9 @@ public class RunDesignerPanel {
 					actionOnRunningDesigner.addActionListener(new ActionListener(){
 						public void actionPerformed(ActionEvent e) {
 							toggle.setEnabled(!cDesign.isRunning());
+							if (cDesign.isRunning()){
+								toggle.setSelected(bOption.getState());	
+							}
 						}
 					});
 				} else if (option instanceof SeqDesignerOption.Double || option instanceof SeqDesignerOption.Integer){
@@ -114,7 +117,15 @@ public class RunDesignerPanel {
 					});
 					actionOnRunningDesigner.addActionListener(new ActionListener(){
 						public void actionPerformed(ActionEvent e) {
+							if (cDesign.isRunning()){
+								if (dOption!=null){
+									jta.setText(dOption.getState()+"");
+								} else {
+									jta.setText(iOption.getState()+"");
+								}
+							}
 							dedicate.setEnabled(!cDesign.isRunning());
+							jta.setEditable(!cDesign.isRunning());
 						}
 					});
 					Box horiz = Box.createHorizontalBox();

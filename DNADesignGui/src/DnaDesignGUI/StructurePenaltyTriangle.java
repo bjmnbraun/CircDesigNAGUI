@@ -121,7 +121,7 @@ public class StructurePenaltyTriangle extends PApplet{
 				popMatrix();
 			}
 			//Draw triangle
-			{
+			try {
 				translate(area.x,area.y);
 				scale(area.width,area.height);
 				scale(1f/len2,1f/len1);
@@ -146,6 +146,8 @@ public class StructurePenaltyTriangle extends PApplet{
 					}
 					lastPoint = t;
 				}
+			} catch (Throwable e){
+				//
 			}
 		} else {
 			fill((float)foldScore*10,0,0);

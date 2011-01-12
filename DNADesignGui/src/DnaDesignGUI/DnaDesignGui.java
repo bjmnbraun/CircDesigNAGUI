@@ -34,6 +34,7 @@ import DnaDesign.DomainDesigner;
 import DnaDesign.DomainDesigner_SharedUtils;
 import DnaDesign.Exception.InvalidDNAMoleculeException;
 import DnaDesign.Exception.InvalidDomainDefsException;
+import DnaDesign.impl.CodonCode;
 import DnaDesignGUI.DNAPreviewStrand.UpdateSuccessfulException;
 
 public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements ModalizableComponent, CaretListener{
@@ -237,14 +238,29 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 					});
 				}
 			};
+			JButton ModifyCodonTable = new JButton("Modify Codon Table"){
+				{
+					addActionListener(new ActionListener(){
+						public void actionPerformed(ActionEvent e) {
+							if (getModalPanel()==null){ return;}
+							if (getModalPanel().getComponentCount() > 0){
+								return;
+							}
+							
+							new ModifyCodonTablePanel(DnaDesignGui.this,monoSpaceFont);
+						}
+					});
+				}
+			};
 			
 			RunDesignerBox.add(GoToDesigner);
 			RunDesignerBox.add(DuplicateReaction);
+			RunDesignerBox.add(ModifyCodonTable);
 			RunDesignerBox.add(SavePreviewImage);
 			
 			JComponent holder = skinGroup(RunDesignerBox, "Run Designer");
-			su.addPreferredSize(RunDesignerBox, 1f-fractionLeftPanel, 0, 0, 100);
-			su.addPreferredSize(holder, 1f-fractionLeftPanel, 0, 0, 100);
+			su.addPreferredSize(RunDesignerBox, 1f-fractionLeftPanel, 0, 0, 120);
+			su.addPreferredSize(holder, 1f-fractionLeftPanel, 0, 0, 120);
 
 			rightPanel.add(holder);	
 		}
@@ -416,6 +432,7 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 	}
 
 	private JTextArea DomainDef, Molecules, ErrorsOutText;
+	public String CodonTable_GUI=CodonCode.defaultTable;
 	private String DomainDef_CLine="", Molecules_CLine="";
 	private int Molecules_CLine_num;
 	private DNAPreviewStrand PreviewSeqs;
@@ -434,7 +451,7 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 			}
 			inputStrands.add(q);
 		}
-		cDesign = DomainDesigner.getDefaultDesigner(inputStrands,DomainDef.getText());
+		cDesign = DomainDesigner.getDefaultDesigner(inputStrands,DomainDef.getText(),CodonTable_GUI);
 	}
 	private JPanel modalPanel;
 	private ArrayList<Runnable> modalScale = new ArrayList();
@@ -447,11 +464,18 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 		runnable.run();
 	}
 
-
 	public void removeAllModalScale() {
 		modalScale.clear();
 	}
 
+	public String getCurrentCodonTable() {
+		return CodonTable_GUI;
+	}
+	public void updateCodonTable(String text) {
+		//Test it first
+		new CodonCode(text);
+		CodonTable_GUI = text;
+	}
 
 	public void caretUpdate(CaretEvent e) {
 		int wise = e.getDot();
@@ -461,7 +485,7 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 		while(lines.hasNextLine()){
 			q = lines.nextLine();
 			countLineTotal += q.length()+1;
-			if (wise <= countLineTotal){
+			if (wise < countLineTotal){
 				break;
 			}
 			countLine++;

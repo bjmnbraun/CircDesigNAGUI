@@ -1,5 +1,6 @@
 package DnaDesignGUI;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -17,6 +18,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 
 public class HelpButton extends JButton implements MouseListener{
@@ -143,12 +145,19 @@ public class HelpButton extends JButton implements MouseListener{
 		comp.setBorder(BorderFactory.createEmptyBorder(0,5,0,5));
 		compH.setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
 		final ScaleUtils su = new ScaleUtils();
-		su.addPreferredSize(compH, 1f, 0, 0, 24);
-		su.addPreferredSize(comp, 1f, 1f, 0, -28);
+		//su.addPreferredSize(compH, 1f, 0, 0, 24);
+		//su.addPreferredSize(comp, 1f, 1f, 0, -28);
 		comp.setVerticalAlignment(JLabel.TOP);
 		
-		openModalDialog.add(compH);
-		openModalDialog.add(comp);
+		JPanel comps = new JPanel();
+		comps.setLayout(new BorderLayout());
+		comps.add(compH,BorderLayout.NORTH);
+		su.addPreferredSize(compH, 1f, 0, 0, 24);
+		comps.add(comp,BorderLayout.CENTER);
+		JScrollPane compHolder = new JScrollPane(comps,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		su.addPreferredSize(compHolder, 1f,1f, 0, -10);
+		su.addPreferredSize(comps, 1f,2f, 0, -10);
+		openModalDialog.add(compHolder);
 		mc.addModalScale(new Runnable(){
 			public void run(){
 				su.pushSizes(openModalDialog.getPreferredSize().width, openModalDialog.getPreferredSize().height);
