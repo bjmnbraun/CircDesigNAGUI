@@ -29,7 +29,9 @@ import DnaDesign.DesignIntermediateReporter;
 import DnaDesign.DnaDefinition;
 import DnaDesign.DomainDesigner;
 import DnaDesign.DomainDesigner_SharedUtils;
+import DnaDesign.DomainPolymerGraph;
 import DnaDesign.DomainSequence;
+import DnaDesign.DomainStructureBNFTree;
 import DnaDesign.DomainStructureData;
 import DnaDesign.DomainDesigner.ScorePenalty;
 import DnaDesign.impl.DomainDesignerImpl;
@@ -195,24 +197,26 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 			DomainDesignerImpl ddi = new DomainDesignerImpl(new FoldingImpl());
 			DomainStructureData dsd = new DomainStructureData();
 			DomainStructureData.readDomainDefs(domainDefs.getText(), dsd);
+			DomainPolymerGraph dsg = new DomainPolymerGraph(dsd);
 			ArrayList<DomainSequence> SingleStrandedRegions = new ArrayList();
 			ArrayList<DomainSequence> HairpinInnards = new ArrayList();
 			ArrayList<DomainSequence[]> HairpinOpenings = new ArrayList();
+			ArrayList<DomainSequence> pairsOfDomains = new ArrayList();  
 			for(int whichMolecule = 0; whichMolecule <= 1; whichMolecule++){
 				if (whichMolecule==0){
-					DomainStructureData.readStructure("Molecule A", last(moleculeInput1.getText().trim().split("\\s+")), dsd);
+					DomainPolymerGraph.readStructure("Molecule A", last(moleculeInput1.getText().trim().split("\\s+")), dsg);
 				} else {
-					DomainStructureData.readStructure("Molecule B", last(moleculeInput2.getText().trim().split("\\s+")), dsd);
+					DomainPolymerGraph.readStructure("Molecule B", last(moleculeInput2.getText().trim().split("\\s+")), dsg);
 				}
-				DomainDesigner_SharedUtils.utilSingleStrandedFinder(dsd, SingleStrandedRegions);
-				DomainDesigner_SharedUtils.utilHairpinInternalsFinder(dsd, HairpinInnards);
-				DomainDesigner_SharedUtils.utilHairpinClosingFinder(dsd, HairpinOpenings);
+				DomainDesigner_SharedUtils.utilSingleStrandedFinder(dsg, SingleStrandedRegions);
+				DomainDesigner_SharedUtils.utilHairpinInternalsFinder(dsg, HairpinInnards);
+				DomainDesigner_SharedUtils.utilHairpinClosingFinder(dsg, HairpinOpenings);
+				DomainDesigner_SharedUtils.utilPairsOfDomainsFinder(dsg, pairsOfDomains);
 			}
-			DomainDesigner_SharedUtils.utilRemoveDuplicateSequences(SingleStrandedRegions);
-			DomainDesigner_SharedUtils.utilRemoveDuplicateSequences(HairpinInnards);
+			
 			DesignIntermediateReporter dir = new DesignIntermediateReporter();
 			
-			List<ScorePenalty> listPenalties = ddi.listPenalties(SingleStrandedRegions, HairpinInnards, HairpinOpenings, dir);
+			List<ScorePenalty> listPenalties = ddi.listPenalties(SingleStrandedRegions, HairpinInnards, HairpinOpenings, pairsOfDomains, dir);
 			for(ScorePenalty sp : listPenalties){
 				penalties.add(new PenaltyObject(sp, dsd));	
 			}

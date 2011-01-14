@@ -15,10 +15,12 @@ import java.util.TreeMap;
 
 import processing.core.PApplet;
 import processing.core.PFont;
+import DnaDesign.DomainStructureBNFTree;
 import DnaDesign.DomainStructureData;
-import DnaDesign.DomainStructureData.DomainStructure;
-import DnaDesign.DomainStructureData.HairpinStem;
-import DnaDesign.DomainStructureData.SingleStranded;
+import DnaDesign.DomainStructureBNFTree.DomainStructure;
+import DnaDesign.DomainStructureBNFTree.HairpinStem;
+import DnaDesign.DomainStructureBNFTree.SingleStranded;
+import DnaDesign.DomainStructureBNFTree.ThreePFivePOpenJunc;
 import DnaDesign.Exception.InvalidDNAMoleculeException;
 import DnaDesign.Exception.InvalidDomainDefsException;
 
@@ -172,14 +174,14 @@ public class DNAPreviewStrand extends PApplet{
 							throw new InvalidDomainDefsException(e.getMessage());
 						}
 						try {
-							DomainStructureData.readStructure(currentMoleculeName, currentMoleculeString, dsd);
+							DomainStructureBNFTree.readStructure(currentMoleculeName, currentMoleculeString, dsg);
 						} catch (Throwable e){
 							//e.printStackTrace();
 							throw new InvalidDNAMoleculeException(e.getMessage(),0);
 						}
 						//How many particles?
 						moleculeNumSubStructures = 0;
-						for(DomainStructure ds : dsd.structures){
+						for(DomainStructure ds : dsg.structures){
 							moleculeNumSubStructures += ds.countLabeledElements();
 						}
 						moleculeNumSubStructures*=3;
@@ -195,9 +197,10 @@ public class DNAPreviewStrand extends PApplet{
 				}
 			}
 			private DomainStructureData dsd = new DomainStructureData();
+			private DomainStructureBNFTree dsg = new DomainStructureBNFTree(dsd);
 			private int[] stopTheWorld = new int[]{0};
 			public void draw(){
-				if (dsd.structures==null){
+				if (dsg.structures==null){
 					return;
 				}
 				if (stopTheWorld[0]!=0){
@@ -296,7 +299,7 @@ public class DNAPreviewStrand extends PApplet{
 				longestHairpin_counterrotation = new float[]{0,1}; //Stays 0 unless a helix is found.
 				try {
 					boolean wasSS = true;
-					for(DomainStructure ds : dsd.structures){
+					for(DomainStructure ds : dsg.structures){
 						drawStructure(ds, actuallyDraw, -1, 0, wasSS && !(ds instanceof HairpinStem));
 						wasSS = ds instanceof SingleStranded;
 					}
@@ -322,12 +325,12 @@ public class DNAPreviewStrand extends PApplet{
 				if (hairpinSize!=-1){
 					deltaTheta = hairpinDeltaTheta(hairpinSize,ringAdd);
 				}
-				if (ds instanceof DomainStructureData.SingleStranded){
+				if (ds instanceof SingleStranded){
 					if (hairpinSize==-1){ //Outer loop
 						rotate(wiggleTheta);
 					}
 					for(int p : ds.sequencePartsInvolved){
-						int domain = dsd.domains[p];
+						int domain = dsg.domains[p];
 						int seqLen = dsd.domainLengths[domain & DNA_SEQ_FLAGSINVERSE];
 						for(int k = 0; k < seqLen; k++){
 							if (k == (seqLen-1) / 2){
@@ -347,8 +350,8 @@ public class DNAPreviewStrand extends PApplet{
 						}
 					}
 					//END OF METHOD
-				} else if (ds instanceof DomainStructureData.HairpinStem){
-					DomainStructureData.HairpinStem hs = (DomainStructureData.HairpinStem)ds;
+				} else if (ds instanceof HairpinStem){
+					HairpinStem hs = (HairpinStem)ds;
 
 					if (hairpinSize==-1){ //Outer loop
 						if (shaftLength==0) //First stem on outside loop
@@ -363,8 +366,8 @@ public class DNAPreviewStrand extends PApplet{
 					}
 
 					//Draw the shaft.
-					int domain = dsd.domains[ds.sequencePartsInvolved[0]];
-					int domain2 = dsd.domains[ds.sequencePartsInvolved[1]];
+					int domain = dsg.domains[ds.sequencePartsInvolved[0]];
+					int domain2 = dsg.domains[ds.sequencePartsInvolved[1]];
 					//They better be the same lengths...
 					int seqLen = dsd.domainLengths[domain & DNA_SEQ_FLAGSINVERSE];
 
@@ -433,7 +436,7 @@ public class DNAPreviewStrand extends PApplet{
 									for(int k = hs.leftRightBreak+1; k < hs.subStructure.size(); k++){
 										DomainStructure domainStructure = hs.subStructure.get(k);
 										if (getLengthPass){
-											rightLoopSize += DomainStructure.getOuterLevelSpace(domainStructure, dsd.domainLengths, dsd.domains);
+											rightLoopSize += DomainStructure.getOuterLevelSpace(domainStructure, dsd.domainLengths, dsg.domains);
 										} else {
 											//Use "lastwasSS" to get it oriented the right way on the way back
 											drawStructure(domainStructure,trueDraw,-1, 0, true);
@@ -470,7 +473,7 @@ public class DNAPreviewStrand extends PApplet{
 					}
 					*/
 					//END OF METHOD
-				} else if (ds instanceof DomainStructureData.ThreePFivePOpenJunc){
+				} else if (ds instanceof ThreePFivePOpenJunc){
 					stroke(0);
 					if (trueDraw){	
 						line(-eW,0,eW,0);
