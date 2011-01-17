@@ -3,7 +3,7 @@
 <project name="DnaDesignGUI.makejar" basedir="./build/" default="default">
 	<!-- make sure outjar / outjar2 are both only filenames, no paths. -->
 
-<!-- random number generator, lol. -->	
+<!-- random number generator -->	
 	<scriptdef language="javascript" manager="javax" name="random"><attribute name="max"/><attribute name="property"/>
 var max=attributes.get("max")
 var property=attributes.get("property")
@@ -22,9 +22,9 @@ if(max==null || property==null) {
 	<property name="p5Main" value="DnaDesignGUI.DnaDesignGui" />
 	<property name="p5Main2" value="DnaDesignGUI.FoldingImplTestGui" />
 	<!-- Path to the actual DNADesign package. -->
-	<property name="DnaDesignPath" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\DNADesign\DNADesign" />
+	<property name="DnaDesignPath" value="/home/benjamin/BuildAssignments/DnaDesign/DnaDesign/DNADesign" />
 	
-	<property name="DSSEngine_path" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\TaiWebDeployUtils/DSSEngine" />
+	<property name="DSSEngine_path" value="/home/benjamin/BuildAssignments/DnaDesign/BuildReqsForDna/TaiWebDeployUtils/DSSEngine" />
 	<property name="DSS_anttasks_path" value="${DSSEngine_path}/DSS-anttasks.jar" />
 	<property name="ant_contrib_jar" value="${DSSEngine_path}/ant-contrib-1.0b3.jar" />
 	
@@ -100,7 +100,7 @@ if(max==null || property==null) {
         <javac destdir="./bin/" includes="**/**"
                includeAntRuntime="false" optimize="true"
 			   debug="true" debuglevel="lines,vars,source"
-			   target="1.5" source="1.5" encoding="PREPROC">
+			   target="1.5" source="1.5">
             <src path="${toCompileJava}" />
 	<classpath>
 <pathelement location="${lib}/Java/Processing/core.jar"/>
