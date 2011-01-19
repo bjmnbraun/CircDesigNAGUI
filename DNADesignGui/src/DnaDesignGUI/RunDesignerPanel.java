@@ -286,16 +286,28 @@ public class RunDesignerPanel {
 						//System.out.println(location);
 					}
 				}			
-				Rectangle newBounds = new Rectangle(location.x,location.y,model.getWidth(),model.getHeight());
+				Rectangle newBounds = new Rectangle(location.x,location.y,model.getPreferredSize().width,model.getPreferredSize().height);
+				/*
 				if (showGraph.getBounds().equals(newBounds)){
 					
 				} else {
 					showGraph.setBounds(newBounds);
 				}
-				//showGraph.setLocation(location.x,location.y);
-				//showGraph.setPreferredSize(new Dimension(holder.getWidth(),holder.getHeight()));
-				//openModalDialog.validate();
+				*/
+				if (stackOverFlowHack[0]){
+					return;
+				}
+				stackOverFlowHack[0] = true;
+				if (!(showGraph.getLocation().equals(location))){
+					showGraph.setLocation(location.x,location.y);
+				}
+				Dimension newSize = new Dimension(model.getPreferredSize().width-1,model.getPreferredSize().height-8);
+				if (!(showGraph.getPreferredSize().equals(newSize))){
+					showGraph.setPreferredSize(newSize);
+				}
+				stackOverFlowHack[0] = false;
 			}
+			private boolean[] stackOverFlowHack = new boolean[]{false};
 		});
 		showGraph.setDesigner(cDesign);
 

@@ -287,6 +287,14 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 						}
 						PreviewSeqs.setLocation(location);
 					//}
+						
+
+						if(modalPanel!=null && PreviewSeqs!=null){
+							if (modalPanel.getComponentCount()==0){
+								PreviewSeqs.setPreferredSize(new Dimension(PreviewSeqsProxy.getPreferredSize().width-8,
+										PreviewSeqsProxy.getPreferredSize().height-6));
+							}
+						}
 				}
 				public void paintComponent(Graphics g){
 					g.setColor(Color.black);
@@ -299,12 +307,6 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 			};
 			PreviewSeqs = new DNAPreviewStrand(this){
 				public void draw(){
-					if(modalPanel!=null && PreviewSeqs!=null){
-						if (modalPanel.getComponentCount()==0){
-							PreviewSeqs.setPreferredSize(new Dimension(PreviewSeqsProxy.getPreferredSize().width-8,
-									PreviewSeqsProxy.getPreferredSize().height-6));
-						}
-					}
 					super.draw();
 				}
 			};
@@ -376,13 +378,8 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 		add(PreviewGraph);
 		add(bottom);
 
-		PreviewSeqs.init();
-		PreviewSeqs.start();
-		
-		PreviewGraph.init();
-		PreviewGraph.start();
-
 		PreviewGraph.setVisible(false);
+		PreviewSeqs.setVisible(true);
 		
 		validate();
 	}
@@ -417,8 +414,10 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 		su.pushSizes(getWidth(), getHeight());
 		if(modalPanel!=null && PreviewSeqs!=null){
 			if (modalPanel.getComponentCount()>0){
-				PreviewSeqs.setPreferredSize(new Dimension(0,0));
+				//PreviewSeqs.setPreferredSize(new Dimension(0,0));
+				PreviewSeqs.setVisible(false);
 			} else {
+				PreviewSeqs.setVisible(true);
 			}
 		} 
 	}
@@ -443,7 +442,7 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 		ArrayList<String> inputStrands = new ArrayList<String>();
 		for(String q : Molecules.getText().split("\n")){
 			String[] line = q.split("\\s+");
-			if (line.length == 0 ){
+			if (line.length == 0){
 				continue;
 			}
 			if (line.length != 2){

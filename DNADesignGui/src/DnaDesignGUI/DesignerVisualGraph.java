@@ -14,8 +14,18 @@ import DnaDesign.DesignIntermediateReporter;
 
 public class DesignerVisualGraph extends PApplet{
 	private DDSeqDesigner design;
+	public void setVisible(boolean b){
+		if (b && !start){
+			init();
+			start();	
+			start = true;
+		}
+		super.setVisible(b);
+	}
+	private boolean start = false;
 	public void setup(){
-		size(100,100,P3D);
+		int w = getPreferredSize().width, h = getPreferredSize().height;
+		size(w,h,P3D);
 		ff = createFont("Arial", 24);
 	}
 	private PFont ff;
@@ -26,6 +36,10 @@ public class DesignerVisualGraph extends PApplet{
 		if (!isVisible()){
 			return;
 		}
+		if (getPreferredSize().width!=width){
+			size(getPreferredSize().width,getPreferredSize().height,P3D);
+		}
+	
 		textFont(ff);
 		background(255,255,255);
 		drawGui();
@@ -234,6 +248,5 @@ public class DesignerVisualGraph extends PApplet{
 		public void setDesigner(DDSeqDesigner design) {
 			this.design = design;
 			dir = design.getDir();
-			background(255);
 		}
 }

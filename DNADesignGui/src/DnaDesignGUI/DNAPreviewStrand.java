@@ -42,6 +42,7 @@ public class DNAPreviewStrand extends PApplet{
 		float[] object = (float[])(entrygeneric);
 		Arrays.fill(object,-1);
 	}
+	//For scaling mkultiple molecule previews when generating PDFs
 	private class ScaleFactors<T> {
 		public void invalidateAbove(int size){
 			while(scaleFactors.lastKey() > size){
@@ -69,19 +70,17 @@ public class DNAPreviewStrand extends PApplet{
 			return scaleFactors.values();
 		}
 	}
-	public void setup(){
-		String wP = null, hP = null;
-		try {
-			wP = getParameter("width");
-			hP = getParameter("height");
-		} catch(Throwable e){
-			
+	public void setVisible(boolean b){
+		if (b && !start){
+			init();
+			start();	
+			start = true;
 		}
+		super.setVisible(b);
+	}
+	private boolean start = false;
+	public void setup(){
 		int w = getPreferredSize().width, h = getPreferredSize().height;
-		if (wP!=null && hP!=null){
-			w = new Integer(wP);
-			h = new Integer(hP);
-		} 
 		size(w,h,P3D);
 		background(0);
 		screen1 = new DnaDesignScreens$0_Screen();
@@ -90,11 +89,10 @@ public class DNAPreviewStrand extends PApplet{
 		if (getPreferredSize().width!=width){
 			size(getPreferredSize().width,getPreferredSize().height,P3D);
 		}
-		//The world is your oyster, or you could refer to the page-system above.
 		g.background(255);
 	};
 	/**
-	 * Just the part that looks like "[3*.|2*.|1*.}
+	 * Without a name, so valid input looks like "[3*.|2*.|1*.}"
 	 * @param molecules_CLine_num 
 	 */
 	public void setCurrentPreviewMolecule(int molecules_CLine_num, int numMolecules, String moleculeDescription, String domainDefs){
@@ -147,8 +145,6 @@ public class DNAPreviewStrand extends PApplet{
 		/**
 		 * What does this screen do?
 		 * 1) Allow user to input "constraints" in a certain format, namely, domain sequences, with structural data as well.
-		 * 2) Allow user to advance to "Run Designer" screen.
-		 * 3) 
 		 */
 		public DnaDesignScreens$0_Screen(){
 			registerDraw(this);
@@ -584,7 +580,7 @@ public class DNAPreviewStrand extends PApplet{
 			vec2[0] = nx;
 			vec2[1] = ny;
 		}
-		//Viewports broken for now.
+		
 		private Rectangle2D.Float previewArea = new Rectangle2D.Float(0,0,1,1);
 		private DnaSequencePreview preview;
 		public void cleanup() {
