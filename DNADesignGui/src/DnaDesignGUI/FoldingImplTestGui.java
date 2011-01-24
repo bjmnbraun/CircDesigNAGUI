@@ -25,13 +25,13 @@ import javax.swing.event.CaretListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import DnaDesign.AbstractDomainDesignTarget;
 import DnaDesign.DesignIntermediateReporter;
 import DnaDesign.DnaDefinition;
 import DnaDesign.DomainDesigner;
 import DnaDesign.DomainDesigner_SharedUtils;
 import DnaDesign.DomainPolymerGraph;
 import DnaDesign.DomainSequence;
-import DnaDesign.DomainStructureBNFTree;
 import DnaDesign.DomainStructureData;
 import DnaDesign.DomainDesigner.ScorePenalty;
 import DnaDesign.impl.DomainDesignerImpl;
@@ -198,25 +198,18 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 			DomainStructureData dsd = new DomainStructureData();
 			DomainStructureData.readDomainDefs(domainDefs.getText(), dsd);
 			DomainPolymerGraph dsg = new DomainPolymerGraph(dsd);
-			ArrayList<DomainSequence> SingleStrandedRegions = new ArrayList();
-			ArrayList<DomainSequence> HairpinInnards = new ArrayList();
-			ArrayList<DomainSequence[]> HairpinOpenings = new ArrayList();
-			ArrayList<DomainSequence> pairsOfDomains = new ArrayList();  
+			AbstractDomainDesignTarget target = new AbstractDomainDesignTarget(dsd);
 			for(int whichMolecule = 0; whichMolecule <= 1; whichMolecule++){
 				if (whichMolecule==0){
-					DomainPolymerGraph.readStructure("Molecule A", last(moleculeInput1.getText().trim().split("\\s+")), dsg);
+					target.addTargetStructure("Molecule A", last(moleculeInput1.getText().trim().split("\\s+")));
 				} else {
-					DomainPolymerGraph.readStructure("Molecule B", last(moleculeInput2.getText().trim().split("\\s+")), dsg);
+					target.addTargetStructure("Molecule B", last(moleculeInput2.getText().trim().split("\\s+")));
 				}
-				DomainDesigner_SharedUtils.utilSingleStrandedFinder(dsg, SingleStrandedRegions);
-				DomainDesigner_SharedUtils.utilHairpinInternalsFinder(dsg, HairpinInnards);
-				DomainDesigner_SharedUtils.utilHairpinClosingFinder(dsg, HairpinOpenings);
-				DomainDesigner_SharedUtils.utilPairsOfDomainsFinder(dsg, pairsOfDomains);
 			}
 			
 			DesignIntermediateReporter dir = new DesignIntermediateReporter();
 			
-			List<ScorePenalty> listPenalties = ddi.listPenalties(SingleStrandedRegions, HairpinInnards, HairpinOpenings, pairsOfDomains, dir);
+			List<ScorePenalty> listPenalties = ddi.listPenalties(target, dir);
 			for(ScorePenalty sp : listPenalties){
 				penalties.add(new PenaltyObject(sp, dsd));	
 			}

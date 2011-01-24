@@ -11,7 +11,7 @@ import DnaDesign.DnaDefinition;
 import DnaDesign.DomainSequence;
 import DnaDesign.DomainDesigner.ScorePenalty;
 import DnaDesign.impl.FoldingImpl;
-import DnaDesign.impl.DomainDesignerImpl.CrossInteraction;
+import DnaDesign.impl.DomainDesignerImpl.MFEHybridScore;
 import DnaDesign.impl.DomainDesignerImpl.SelfFold;
 
 public class StructurePenaltyTriangle extends PApplet{
@@ -36,7 +36,7 @@ public class StructurePenaltyTriangle extends PApplet{
 		fil = new FoldingImpl();
 	}
 	public void setPenalty(ScorePenalty sp, int[][] domain_sequences, int[][] nullMarkings){
-		if (sp instanceof CrossInteraction || sp instanceof SelfFold){
+		if (sp instanceof MFEHybridScore || sp instanceof SelfFold){
 			curSeqs = sp.getSeqs();
 			domain = domain_sequences;
 			domain_markings = nullMarkings;
@@ -54,12 +54,12 @@ public class StructurePenaltyTriangle extends PApplet{
 		double score = 0;
 		int len1, len2;
 		len2 = len1 = curSeqs[0].length(domain);
-		if (sp instanceof CrossInteraction){
+		if (sp instanceof MFEHybridScore){
 			len2 = curSeqs[1].length(domain);
-			score = fil.pairscore_viaMatrix(curSeqs[0],curSeqs[1],domain,domain_markings);
+			score = fil.mfeHybridDeltaG_viaMatrix(curSeqs[0],curSeqs[1],domain,domain_markings);
 		}
 		if (sp instanceof SelfFold){
-			score = fil.foldSingleStranded(curSeqs[0],domain,domain_markings);
+			score = fil.mfeSSDeltaG(curSeqs[0],domain,domain_markings);
 		}
 		traceback = fil.getTraceback();
 		nussinovScores = fil.getNussinovMatrixScore(len1,len2);
