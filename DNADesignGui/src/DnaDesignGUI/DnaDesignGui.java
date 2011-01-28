@@ -154,8 +154,8 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 				
 				JComponent holder = skinGroup(DomainDefWithHelp, ComponentHelp[compNum][0]);
 				leftPanelHeight+=.5f;
-				su.addPreferredSize(DomainDefholder, fractionLeftPanel, .5f, -scW-9-HelpButton.dim.width, -32);
 				su.addPreferredSize(holder, fractionLeftPanel, .5f, -scW, -4);
+				su.addPreferredSize(DomainDefholder, fractionLeftPanel, .5f, -scW-9-HelpButton.dim.width, -32);
 				leftPanel.add(holder);
 			}
 		} catch (Throwable e){
@@ -421,12 +421,14 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 			}
 		} 
 	}
+	private boolean[] invalidate_thread = new boolean[]{true};
 	public void invalidate(){
-		//Good time as any.
-		su.pushSizes(getWidth(), getHeight());
-		for(Runnable q : modalScale){
-			q.run();
-		}
+			//Good time as any.
+			//su.pushSizes(getWidth(), getHeight());
+			fixAWT();
+			for(Runnable q : modalScale){
+				q.run();
+			}
 		super.invalidate();
 	}
 

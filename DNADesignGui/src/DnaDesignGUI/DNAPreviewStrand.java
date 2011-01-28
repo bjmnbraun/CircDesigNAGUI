@@ -296,7 +296,7 @@ public class DNAPreviewStrand extends PApplet{
 				try {
 					boolean wasSS = true;
 					for(DomainStructure ds : dsg.structures){
-						drawStructure(ds, actuallyDraw, -1, 0, wasSS && !(ds instanceof HairpinStem));
+						drawStructure(ds, actuallyDraw, dsg.outerCurveCircum, 0, wasSS && !(ds instanceof HairpinStem));
 						wasSS = ds instanceof SingleStranded;
 					}
 				} catch (Throwable e){
@@ -312,7 +312,7 @@ public class DNAPreviewStrand extends PApplet{
 				//TODO: button to turn this on / off
 				float wiggleTheta = !dynamicWiggle?PI/4:sin(frameCount/120f*(1+ds.random0*.3f)+ds.random0*TWO_PI)*.3f; 
 				wiggleTheta = lastWasSS?0:wiggleTheta;
-				float HairpinOpenAngle = HALF_PI-PI/8;
+				float HairpinOpenAngle = wiggleTheta;
 				float eW = .03f;
 				float openingSize = 2f;
 				//Additional space to put on the ring, due to the opening of the loop.

@@ -11,7 +11,7 @@ import DnaDesign.DnaDefinition;
 import DnaDesign.DomainSequence;
 import DnaDesign.DomainDesigner.ScorePenalty;
 import DnaDesign.impl.FoldingImpl;
-import DnaDesign.impl.DomainDesignerImpl.CrossInteraction;
+import DnaDesign.impl.DomainDesignerImpl.MFEHybridScore;
 import DnaDesign.impl.DomainDesignerImpl.SelfFold;
 
 public class StructurePenaltyTriangle extends PApplet{
@@ -36,7 +36,7 @@ public class StructurePenaltyTriangle extends PApplet{
 		fil = new FoldingImpl();
 	}
 	public void setPenalty(ScorePenalty sp, int[][] domain_sequences, int[][] nullMarkings){
-		if (sp instanceof CrossInteraction || sp instanceof SelfFold){
+		if (sp instanceof MFEHybridScore || sp instanceof SelfFold){
 			curSeqs = sp.getSeqs();
 			domain = domain_sequences;
 			domain_markings = nullMarkings;
@@ -54,12 +54,12 @@ public class StructurePenaltyTriangle extends PApplet{
 		double score = 0;
 		int len1, len2;
 		len2 = len1 = curSeqs[0].length(domain);
-		if (sp instanceof CrossInteraction){
+		if (sp instanceof MFEHybridScore){
 			len2 = curSeqs[1].length(domain);
-			score = fil.pairscore_viaMatrix(curSeqs[0],curSeqs[1],domain,domain_markings);
+			score = fil.mfeHybridDeltaG_viaMatrix(curSeqs[0],curSeqs[1],domain,domain_markings);
 		}
 		if (sp instanceof SelfFold){
-			score = fil.foldSingleStranded(curSeqs[0],domain,domain_markings);
+			score = fil.mfeSSDeltaG(curSeqs[0],domain,domain_markings);
 		}
 		traceback = fil.getTraceback();
 		nussinovScores = fil.getNussinovMatrixScore(len1,len2);
@@ -71,6 +71,17 @@ public class StructurePenaltyTriangle extends PApplet{
 	public void setup(){
 		ff = createFont("Arial", 20);
 		size(100, 100, P3D);
+	}
+
+	private void fillByMarker(DomainSequence seq1, int y, int[][] domain2) {
+
+		int cD = seq1.domainAt(y, domain) & DomainSequence.DNA_SEQ_FLAGSINVERSE;
+		int off = seq1.offsetInto(y, domain, true);
+		if (domain_markings[cD][off]!=0){
+			fill(255,0,0);
+		} else {
+			fill(0);
+		}
 	}
 	public void draw(){
 		noLoop();
@@ -99,6 +110,7 @@ public class StructurePenaltyTriangle extends PApplet{
 					scale(1f/len2,1f/len1);
 					translate(.5f,.5f);
 					scale(10f/width,10f/height);
+					fillByMarker(seq1,y,domain);
 					text(""+DnaDefinition.displayBase(seq1.base(y, domain)),0,0);
 					popMatrix();
 					translate(0,area.height/len1);
@@ -114,6 +126,7 @@ public class StructurePenaltyTriangle extends PApplet{
 					scale(1f/len2,1f/len1);
 					translate(.5f,.5f);
 					scale(10f/width,10f/height);
+					fillByMarker(seq2,x,domain);
 					text(""+DnaDefinition.displayBase(seq2.base(x, domain)),0,0);
 					popMatrix();
 					translate(area.width/len2,0);
@@ -155,4 +168,5 @@ public class StructurePenaltyTriangle extends PApplet{
 		}
 		popMatrix();
 	}
+
 }

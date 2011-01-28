@@ -44,7 +44,7 @@ public class RunDesignerPanel {
 			DesignerOptions options = cDesign.getOptions();
 			for(final SeqDesignerOption option : options.options){
 				JLabel label = new JLabel();
-				label.setText(option.getDescription());
+				label.setText("<html>"+option.getDescription()+"</html>");
 				if (option instanceof SeqDesignerOption.Boolean){
 					//Add a new toggle
 					final JCheckBox toggle = new JCheckBox();
@@ -83,7 +83,8 @@ public class RunDesignerPanel {
 					}
 					//Add a value field
 					final JTextField jta = new JTextField(12);
-					jta.setMaximumSize(new Dimension(200,23));
+					jta.setMaximumSize(new Dimension(150,23));
+					jta.setMinimumSize(new Dimension(150,23));
 					final String defaultDedicateText = "Go";
 					final JButton dedicate = new JButton(defaultDedicateText);
 					if (dOption!=null){
