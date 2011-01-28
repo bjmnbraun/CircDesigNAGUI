@@ -72,6 +72,17 @@ public class StructurePenaltyTriangle extends PApplet{
 		ff = createFont("Arial", 20);
 		size(100, 100, P3D);
 	}
+
+	private void fillByMarker(DomainSequence seq1, int y, int[][] domain2) {
+
+		int cD = seq1.domainAt(y, domain) & DomainSequence.DNA_SEQ_FLAGSINVERSE;
+		int off = seq1.offsetInto(y, domain, true);
+		if (domain_markings[cD][off]!=0){
+			fill(255,0,0);
+		} else {
+			fill(0);
+		}
+	}
 	public void draw(){
 		noLoop();
 		background(255);
@@ -99,6 +110,7 @@ public class StructurePenaltyTriangle extends PApplet{
 					scale(1f/len2,1f/len1);
 					translate(.5f,.5f);
 					scale(10f/width,10f/height);
+					fillByMarker(seq1,y,domain);
 					text(""+DnaDefinition.displayBase(seq1.base(y, domain)),0,0);
 					popMatrix();
 					translate(0,area.height/len1);
@@ -114,6 +126,7 @@ public class StructurePenaltyTriangle extends PApplet{
 					scale(1f/len2,1f/len1);
 					translate(.5f,.5f);
 					scale(10f/width,10f/height);
+					fillByMarker(seq2,x,domain);
 					text(""+DnaDefinition.displayBase(seq2.base(x, domain)),0,0);
 					popMatrix();
 					translate(area.width/len2,0);
@@ -155,4 +168,5 @@ public class StructurePenaltyTriangle extends PApplet{
 		}
 		popMatrix();
 	}
+
 }
