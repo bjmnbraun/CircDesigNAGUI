@@ -27,9 +27,9 @@ import javax.swing.event.ListSelectionListener;
 
 import DnaDesign.AbstractDomainDesignTarget;
 import DnaDesign.DesignIntermediateReporter;
+import DnaDesign.DesignerOptions;
 import DnaDesign.DnaDefinition;
 import DnaDesign.DomainDesigner;
-import DnaDesign.DomainDesigner_SharedUtils;
 import DnaDesign.DomainPolymerGraph;
 import DnaDesign.DomainSequence;
 import DnaDesign.DomainStructureData;
@@ -57,13 +57,14 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 			}
 		}.start();
 	}
+	private FoldingImpl fil;
 	private StructurePenaltyTriangle triangleApplet;
 	private JPanel triangleAppletProxy;
 	private JList possibleViews;
 	private int[][] domain_sequences;
 	
 	private DefaultListModel possibleViews_model;
-	private JTextArea domainDefs,errText;
+	private JTextArea domainDefs,errText,penaltyScore;
 	private JTextField moleculeInput1, moleculeInput2;
 	private String molAtextLatch = "", molBtextLatch = "", domainDefsTextLatch = "";
 
@@ -75,7 +76,9 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 			for(int k = 0; k < nullMarkings.length; k++){
 				nullMarkings[k] = new int[domain_sequences[k].length];
 			}
-			triangleApplet.setPenalty(cur.sp, domain_sequences, nullMarkings);
+			triangleApplet.setPenalty(cur.sp, domain_sequences, nullMarkings, fil);
+			double score = cur.sp.evalScoreSub(domain_sequences, nullMarkings);
+			penaltyScore.setText(String.format("%.3f",score));
 		}
 	}
 	
@@ -88,7 +91,7 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 				updatepossibleViews();
 			}
 		};
-		float leftProportion = .4f;
+		float leftProportion = .5f;
 		{
 			domainDefs = new JTextArea("");
 			JScrollPane domainDefsScroll = new JScrollPane(domainDefs);
@@ -136,6 +139,12 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 			errText.setEditable(false);
 			errText.setBorder(BorderFactory.createEtchedBorder());
 			JComponent errTexH = skinGroup(errText, "Errors");
+			
+			penaltyScore = new JTextArea("");
+			penaltyScore.setEditable(false);
+			penaltyScore.setBorder(BorderFactory.createEtchedBorder());
+			JComponent penaltyScoreH = skinGroup(penaltyScore, "Penalty Evaluation");
+			
 			triangleAppletProxy = skinPanel(new JPanel(){
 				public void setPreferredSize(Dimension dim){
 					super.setPreferredSize(dim);
@@ -157,11 +166,14 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 			};
 			triangleAppletProxy.setBorder(BorderFactory.createLineBorder(Color.black, 8));
 			
-			JComponent triangleproxyGroup = skinGroup(triangleAppletProxy, "Structure analysis, with MFE labeled");
+			JComponent triangleproxyGroup = skinGroup(triangleAppletProxy, "Structure analysis, displaying MFE");
 			rightPanel.add(errTexH);
+			rightPanel.add(penaltyScoreH);
 			rightPanel.add(triangleproxyGroup);
 			su.addPreferredSize(errText, 1f-leftProportion, .2f, -9, -9);
 			su.addPreferredSize(errTexH, 1f-leftProportion, .2f);
+			su.addPreferredSize(penaltyScore, 1f-leftProportion, .1f, -9, -9);
+			su.addPreferredSize(penaltyScoreH, 1f-leftProportion, .1f);
 			su.addPreferredSize(triangleAppletProxy, 1f-leftProportion, 0, -8, 0, 1f);
 			su.addPreferredSize(triangleproxyGroup, 1f-leftProportion, 0, 0, 18, 1f);
 			su.addPreferredSize(rightPanel, 1-leftProportion, 1f);	
@@ -194,7 +206,8 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 	private Collection<PenaltyObject> getPenalties() {
 		ArrayList<PenaltyObject> penalties = new ArrayList();
 		try {
-			DomainDesignerImpl ddi = new DomainDesignerImpl(new FoldingImpl());
+			fil = new FoldingImpl();
+			DomainDesignerImpl ddi = new DomainDesignerImpl(fil);
 			DomainStructureData dsd = new DomainStructureData();
 			DomainStructureData.readDomainDefs(domainDefs.getText(), dsd);
 			DomainPolymerGraph dsg = new DomainPolymerGraph(dsd);
@@ -209,10 +222,6 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 			
 			DesignIntermediateReporter dir = new DesignIntermediateReporter();
 			
-			List<ScorePenalty> listPenalties = ddi.listPenalties(target, dir);
-			for(ScorePenalty sp : listPenalties){
-				penalties.add(new PenaltyObject(sp, dsd));	
-			}
 			//Make domain array
 			int[] domainLengths = dsd.domainLengths;
 			int[][] domain = new int[domainLengths.length][];
@@ -226,6 +235,12 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 					}
 				}
 			}
+
+			List<ScorePenalty> listPenalties = ddi.listPenalties(target, dir, domain, DesignerOptions.getDefaultOptions());
+			for(ScorePenalty sp : listPenalties){
+				penalties.add(new PenaltyObject(sp, dsd));	
+			}
+			
 			domain_sequences = domain;
 			errText.setText("No problems here");
 		} catch (Throwable e){

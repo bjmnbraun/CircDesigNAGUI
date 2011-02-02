@@ -13,6 +13,7 @@ import DnaDesign.DomainDesigner.ScorePenalty;
 import DnaDesign.impl.FoldingImpl;
 import DnaDesign.impl.DomainDesignerImpl.MFEHybridScore;
 import DnaDesign.impl.DomainDesignerImpl.SelfFold;
+import DnaDesign.impl.DomainDesignerImpl.SelfSimilarityScore;
 
 public class StructurePenaltyTriangle extends PApplet{
 	private DnaDesignGUI_ThemedApplet mc;
@@ -25,7 +26,9 @@ public class StructurePenaltyTriangle extends PApplet{
 	private FoldingImpl fil;
 	
 	private double foldScore;
-	
+	public double getEvalScore(){
+		return foldScore;
+	}
 	public void invalidate(){
 		super.invalidate();
 		loop();
@@ -33,10 +36,10 @@ public class StructurePenaltyTriangle extends PApplet{
 	
 	public StructurePenaltyTriangle(DnaDesignGUI_ThemedApplet mc){
 		this.mc = mc;
-		fil = new FoldingImpl();
 	}
-	public void setPenalty(ScorePenalty sp, int[][] domain_sequences, int[][] nullMarkings){
-		if (sp instanceof MFEHybridScore || sp instanceof SelfFold){
+	public void setPenalty(ScorePenalty sp, int[][] domain_sequences, int[][] nullMarkings, FoldingImpl fil){
+		this.fil = fil;
+		if (sp instanceof MFEHybridScore || sp instanceof SelfFold || sp instanceof SelfSimilarityScore){
 			curSeqs = sp.getSeqs();
 			domain = domain_sequences;
 			domain_markings = nullMarkings;
@@ -54,12 +57,13 @@ public class StructurePenaltyTriangle extends PApplet{
 		double score = 0;
 		int len1, len2;
 		len2 = len1 = curSeqs[0].length(domain);
+		score = sp.evalScoreSub(domain, domain_markings);
 		if (sp instanceof MFEHybridScore){
 			len2 = curSeqs[1].length(domain);
-			score = fil.mfeHybridDeltaG_viaMatrix(curSeqs[0],curSeqs[1],domain,domain_markings);
+			//score = fil.mfeHybridDeltaG_viaMatrix(curSeqs[0],curSeqs[1],domain,domain_markings);
 		}
 		if (sp instanceof SelfFold){
-			score = fil.mfeSSDeltaG(curSeqs[0],domain,domain_markings);
+			//score = fil.mfeSSDeltaG(curSeqs[0],domain,domain_markings);
 		}
 		traceback = fil.getTraceback();
 		nussinovScores = fil.getNussinovMatrixScore(len1,len2);
@@ -105,7 +109,7 @@ public class StructurePenaltyTriangle extends PApplet{
 				fill(0);
 				textFont(ff);
 				textAlign(CENTER,CENTER);
-				for(int y = 0; y < len1; y++){
+				for(int y = 0; y < len1; y++){	
 					pushMatrix();
 					scale(1f/len2,1f/len1);
 					translate(.5f,.5f);
@@ -168,5 +172,4 @@ public class StructurePenaltyTriangle extends PApplet{
 		}
 		popMatrix();
 	}
-
 }
