@@ -3,6 +3,7 @@ package DnaDesignGUI;
 import java.util.Scanner;
 
 import DnaDesign.DomainStructureData;
+import DnaDesign.Config.CircDesigNAConfig;
 
 public class DomainBNFToDotParens {
 	public static void main(String[] args){
@@ -20,7 +21,8 @@ public class DomainBNFToDotParens {
 				DomainDefs.append(lineEnd);
 			}
 		}
-		DomainStructureData dsd = new DomainStructureData();
+		CircDesigNAConfig config = new CircDesigNAConfig();
+		DomainStructureData dsd = new DomainStructureData(config);
 		DomainStructureData.readDomainDefs(DomainDefs.toString(), dsd);
 		for(String q : Molecule.toString().split("(\\||}|\\[)+")){
 			if (q.length()>0){

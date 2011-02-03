@@ -17,6 +17,7 @@ import processing.core.PApplet;
 import processing.core.PFont;
 import DnaDesign.DomainStructureBNFTree;
 import DnaDesign.DomainStructureData;
+import DnaDesign.Config.CircDesigNAConfig;
 import DnaDesign.DomainStructureBNFTree.DomainStructure;
 import DnaDesign.DomainStructureBNFTree.HairpinStem;
 import DnaDesign.DomainStructureBNFTree.SingleStranded;
@@ -30,10 +31,12 @@ import DnaDesign.Exception.InvalidDomainDefsException;
  */
 public class DNAPreviewStrand extends PApplet{
 	private static final long INPUT_CLOCK_INT = (long) .3e9;
-	public DNAPreviewStrand(DnaDesignGUI_ThemedApplet mc) {
+	public DNAPreviewStrand(DnaDesignGUI_ThemedApplet mc, CircDesigNAConfig config) {
+		this.config = config;
 		this.mc = mc;
 	}
 	private DnaDesignGUI_ThemedApplet mc;
+	private CircDesigNAConfig config;
 	private ScaleFactors<float[]> moleculeScales = new ScaleFactors<float[]>();
 	private Object makeMolecularScale(){
 		return new float[]{-1,-1};
@@ -123,16 +126,26 @@ public class DNAPreviewStrand extends PApplet{
 	}
 	public static class ConstraintColors {
 		public static final float[] 
-		                      G = new float []{0,128,0},
+		                      G = new float []{0,100,0},
 		                      A = new float []{0,0,255},
 		                      T = new float []{125,125,0},
 		                      C = new float []{112,24,27},
-		                      D = new float []{100,0,140},
-		                      H = new float []{24,27,120},
 		                      P = new float []{100,100,140},
 		                      Z = new float []{24,100,120},
-		                      NONE = new float []{0,0,0},
-		                      ERROR = new float []{255,0,0}
+		                      ERROR = new float []{255,0,0},
+		                      //D = new float []{100,0,140},
+		                      //H = new float []{24,27,120},
+		                      R = new float []{10,150,50},
+		                      Y = R,
+		                      M = Y,
+		                      K = M,
+		                      S = K,
+		                      W = S,
+		                      V = W,
+		                      H = V,
+		                      B = H,
+		                      D = B,
+		                      NONE = new float []{0,0,0}
 		; 
 	}
 	private String currentMoleculeString = "", currentMoleculeName="";
@@ -192,7 +205,7 @@ public class DNAPreviewStrand extends PApplet{
 					throw new UpdateSuccessfulException();
 				}
 			}
-			private DomainStructureData dsd = new DomainStructureData();
+			private DomainStructureData dsd = new DomainStructureData(config);
 			private DomainStructureBNFTree dsg = new DomainStructureBNFTree(dsd);
 			private int[] stopTheWorld = new int[]{0};
 			public void draw(){
@@ -499,20 +512,18 @@ public class DNAPreviewStrand extends PApplet{
 					fillA(!isComp?ConstraintColors.G:ConstraintColors.C); break;
 				case 'A':
 					fillA(!isComp?ConstraintColors.A:ConstraintColors.T); break;
-				case 'T':
+				case 'T': case 'U':
 					fillA(!isComp?ConstraintColors.T:ConstraintColors.A); break;
 				case 'C':
 					fillA(!isComp?ConstraintColors.C:ConstraintColors.G); break;
-				case 'D':
-					fillA(!isComp?ConstraintColors.H:ConstraintColors.D); break;
-				case 'H':
-					fillA(!isComp?ConstraintColors.D:ConstraintColors.H); break;
 				case 'P':
 					fillA(!isComp?ConstraintColors.H:ConstraintColors.D); break;
 				case 'Z':
 					fillA(!isComp?ConstraintColors.D:ConstraintColors.H); break;
-				case '-':
+				case '-': case 'N':
 					fillA(ConstraintColors.NONE); break;
+				case 'R': case 'Y': case 'M': case 'K': case 'S': case 'W': case 'V': case 'H': case 'B': case 'D':
+					fillA(ConstraintColors.R); break;
 				default:
 					fillA(ConstraintColors.ERROR); break;
 				}

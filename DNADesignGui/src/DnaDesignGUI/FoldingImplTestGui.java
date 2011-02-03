@@ -28,11 +28,12 @@ import javax.swing.event.ListSelectionListener;
 import DnaDesign.AbstractDomainDesignTarget;
 import DnaDesign.DesignIntermediateReporter;
 import DnaDesign.DesignerOptions;
-import DnaDesign.DnaDefinition;
 import DnaDesign.DomainDesigner;
 import DnaDesign.DomainPolymerGraph;
 import DnaDesign.DomainSequence;
 import DnaDesign.DomainStructureData;
+import DnaDesign.AbstractPolymer.DnaDefinition;
+import DnaDesign.Config.CircDesigNAConfig;
 import DnaDesign.DomainDesigner.ScorePenalty;
 import DnaDesign.impl.DomainDesignerImpl;
 import DnaDesign.impl.FoldingImpl;
@@ -57,6 +58,7 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 			}
 		}.start();
 	}
+	private CircDesigNAConfig config;
 	private FoldingImpl fil;
 	private StructurePenaltyTriangle triangleApplet;
 	private JPanel triangleAppletProxy;
@@ -83,6 +85,12 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 	}
 	
 	private void runStartRoutine() {
+		//Logic
+		config = new CircDesigNAConfig();
+		
+		
+		//Gui
+		
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout(new BorderLayout());
 		JPanel leftPanel = skinPanel(new JPanel());
@@ -158,7 +166,7 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 					triangleApplet.setLocation(loc);
 				}
 			});
-			triangleApplet = new StructurePenaltyTriangle(this){
+			triangleApplet = new StructurePenaltyTriangle(this,config){
 				public void draw(){
 					triangleApplet.setSize(new Dimension(triangleAppletProxy.getPreferredSize().width -16, triangleAppletProxy.getPreferredSize().height -16));
 					super.draw();
@@ -206,12 +214,12 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 	private Collection<PenaltyObject> getPenalties() {
 		ArrayList<PenaltyObject> penalties = new ArrayList();
 		try {
-			fil = new FoldingImpl();
-			DomainDesignerImpl ddi = new DomainDesignerImpl(fil);
-			DomainStructureData dsd = new DomainStructureData();
+			fil = new FoldingImpl(config);
+			DomainDesignerImpl ddi = new DomainDesignerImpl(fil,config);
+			DomainStructureData dsd = new DomainStructureData(config);
 			DomainStructureData.readDomainDefs(domainDefs.getText(), dsd);
 			DomainPolymerGraph dsg = new DomainPolymerGraph(dsd);
-			AbstractDomainDesignTarget target = new AbstractDomainDesignTarget(dsd);
+			AbstractDomainDesignTarget target = new AbstractDomainDesignTarget(dsd,config);
 			for(int whichMolecule = 0; whichMolecule <= 1; whichMolecule++){
 				if (whichMolecule==0){
 					target.addTargetStructure("Molecule A", last(moleculeInput1.getText().trim().split("\\s+")));
@@ -229,8 +237,8 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 				domain[i] = new int[domainLengths[i]];
 				String constraint = dsd.getConstraint(i);
 				for(int j = 0; j < domain[i].length; j++){
-					domain[i][j] = DomainDesigner.decodeConstraintChar(constraint.charAt(j));
-					if (DnaDefinition.noFlags(domain[i][j])==DnaDefinition.NOBASE){
+					domain[i][j] = config.monomer.decodeConstraintChar(constraint.charAt(j));
+					if (config.monomer.noFlags(domain[i][j])==DnaDefinition.NOBASE){
 						throw new RuntimeException("Invalid sequence given for "+dsd.getDomainName(i));
 					}
 				}

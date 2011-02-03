@@ -185,8 +185,8 @@ if(max==null || property==null) {
 		<!-- sign the jar! -->
 		<echo message="NOTE: you have to create a key/value pair using KeyTool and use it to sign the jar! " />
 		
-		<signit dir="/web/" file="${webjar}" keyname="mykey2" pass="codeofdoom" />
-		<signit dir="/web/" file="DnaDesign.jar" keyname="mykey2" pass="codeofdoom" />
+		<signit dir="/web/" file="${webjar}" keyname="key2011" pass="codeofdoom" />
+		<signit dir="/web/" file="DnaDesign.jar" keyname="key2011" pass="codeofdoom" />
 		
 		<copy todir=".">
 			<fileset dir="${dataDir_local}/web" includes="*.html,*.jnlp" />

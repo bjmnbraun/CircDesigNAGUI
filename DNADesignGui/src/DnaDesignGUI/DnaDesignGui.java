@@ -32,6 +32,7 @@ import javax.swing.text.JTextComponent;
 import DnaDesign.DDSeqDesigner;
 import DnaDesign.DomainDesigner;
 import DnaDesign.DomainDesigner_SharedUtils;
+import DnaDesign.Config.CircDesigNAConfig;
 import DnaDesign.Exception.InvalidDNAMoleculeException;
 import DnaDesign.Exception.InvalidDomainDefsException;
 import DnaDesign.impl.CodonCode;
@@ -61,7 +62,10 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 		}.start();
 	}
 	private void runStartRoutine(){
-		//Load up the bottompanel
+		//Logic:
+		CircDesignConfig = new CircDesigNAConfig();
+		
+		//Gui:
 		
 		JPanel bottomPanel = new JPanel(){
 			public boolean isOptimizedDrawingEnabled(){
@@ -101,22 +105,44 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 		String[][] ComponentHelp = new String[][]{
 				{
 					"Domain Definition",
-					"The input of this box describes the DNA 'domains' which will be designed or used by the designer. Each line of this textual input describes a seperate domain in the syntax:<br>" +
-					"&#60;ID&#62; &#60;Length&#62; {Sequence Constraints} {-Option1{(arguments)}}<br>" +
-					"Where &#60;bracket&#62;'ed elements are Required fields, and {bracket}'ed elements are Optional.<br><br>Example:<br>" +
-					"1	8	[--------]	<br>" +
+					"The input of this box provides the DNA 'words', or domains, which will be designed. Each line of this textual input describes a seperate domain in the syntax:<br><br>" +
+					"&#60;ID&#62; &#60;Length&#62; {Sequence Initialization} {-Option1{(arguments)}}<br><br>" +
+					"Where <ul><li>ID is an alphanumeric, unique identifier of the domain, </li><li>Length is the domain's length,  </li><li>Sequence Initialization defines" +
+					" the initial state of the domain. Base-specific constraints can be imposed here, using these special codes (for RNA, replace 'T' with 'U')." +
+					"<table border=\"1\">" +
+					"<tr><th>Codes</th><th>Possible Bases</th></tr>" +
+					"<tr><td>N -</td><td> no constraints</td></tr>" +
+					"<tr><td>R</td><td> A, G</td></tr>" +
+					"<tr><td>Y</td><td> C, G</td></tr>" +
+					"<tr><td>M</td><td> A, C</td></tr>" +
+					"<tr><td>K</td><td> G, T</td></tr>" +
+					"<tr><td>S</td><td> C, G</td></tr>" +
+					"<tr><td>W</td><td> A, T</td></tr>" +
+					"<tr><td>V</td><td> A, C, G</td></tr>" +
+					"<tr><td>H</td><td> A, C, T</td></tr>" +
+					"<tr><td>B</td><td> C, G, T</td></tr>" +
+					"<tr><td>D</td><td> A, G, T</td></tr>" +
+					"</table>" +
+					"</li><li>The current available options are:" +
+					"<ul><li>-seq(Bases, Min, Max): The domain must contain at least <i>Min</i> and at most <i>Max</i> of the <i>Bases</i> bases. Bases can be a single base," +
+					" or it can be multiple bases by separating each base with the '+' sign. <i>Min</i> and <i>Max</i> are in units of bases, but can be input as integer percentages of the" +
+					"entire domain by adding the % character (see below for examples). To remove either the <i>Min</i> or <i>Max</i> constraint, set them to a negative value.</li></ul>" +
+					"</li></ul>" +
+					"&#60;bracket&#62;'ed elements are Required fields, and {bracket}'ed elements are Optional. If Sequence Initialization is provided, then the Length field is ignored.<br><br><u>Example:</u><br>" +
+					"1	8	<br>" +
 					"2	10	GRR[-----]	<br>" +
 					"a	4	GACC	<br>" +
 					"3	10	[GACTCCAG]	-seq(A,-1,-1,T,-1,3,G,1,-1,C,2,4)<br>" +
 					"4	9	[AAAAAAAAA]	-p<br>" +
-					"5  8  -seq(D,-1,-1,P,-1,-1,Z,-1,-1,H,-1,-1)"+	
+					"5  8  -seq(P,-1,-1,Z,-1,-1)<br>"+
+					"6  23  -seq(G+C,45%,55%)"+	
 					"<br><br>" +
 					"Translates to:<br>" +
 					"Domain '1' is 8bp long and has no constraints. " +
 					"Domain '2' has some constraints imposed, where 'R' is a degenerate basepair. " +
 					"Domain 'a' is locked, and will not be modified by the designer. " +
 					"<br>Wrapping a portion of the constraint in square brackets ('[' and ']') flags that the given portion of the domain is mutable. " +
-					"Domain 3 is not locked, but the designer will initiall seed its sequence with the given code." +
+					"Domain 3 is not locked, but the designer will initially work with the given sequence." +
 					"Additionally, Domain 3 has composition based constraints imposed, with the -seq option, where <br>" +
 					"<ul>" +
 					"<li>Any number of A's are allowed (-1 means no lower bound, -1 means no upper bound)</li>"+
@@ -124,19 +150,26 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 					"<li>Number of G's &#62;= 1 (1 is lower bound, -1 means no upper bound)</li>"+
 					"<li>2 &#60;= Number of C's &#60;= 4 (2 lower bound, 4 upper bound)</li>"+
 					"</ul>"+
-					"Additionally, the -seq option also allows one to experiment with exotic bases (D,P,H,Z). By default, these bases are set to lower bound 0, upper bound 0 (so they are disallowed). " +
-					"In Domain 5, the -seq arguments specify that any number of D,P,H, and Z are allowed, overriding this default."
+					"Additionally, the -seq option also allows one to experiment with exotic bases (P,Z). By default, these bases are set to lower bound 0, upper bound 0 (so they are disallowed). " +
+					"In Domain 5, the -seq arguments specify that any number of P and Z are allowed, overriding this default. Domain 6 specifies that the number of G's plus the number of C's will be between" +
+					" 45% and 55% of the domain's length" +
+					"\n<br>"
 				},
 				{
 					"Molecules",
-					"The input of this box describes the DNA molecules which are present in the solution being designed. Each line of this textual input describes a seperate molecule, in a format of multiple \"domain(Complement?)|\" elements. The designer will implicitly recognize the constraints imposed by these definitions. That is, <br>" +
-					"   1)\tParts of DNA molecules not specified as duplexed will be have secondary structure removed during design.<br>" +
-					"   2)\tDNA molecules will be designed to minimize hybridization with one another (nonspecific interactions)<br>" +
+					"The input of this box provides the DNA molecules which are present in the solution being designed. Each line of this textual input describes a seperate molecule, by listing its component nucleic acid strands." +
+					"<ul><li>Each strand is an ordered list of domain ID's, separated by the pipe character '|'</li>" +
+					"<li>Each domain ID is optionally followed by the <i>reverse complement</i> operator, the asterisk '*'</li>" +
+					"<li>Each domain is marked by a hybridization flag, which is either a '.', a '(', or a ')', which is a Dot-Parenthesis" +
+					"representation of the secondary structure formed by the molecule. '.' (no hybridization) is default.</li>" +
+					"</ul> The designer will interpret the Dot-Parenthesis structures, and produce its net optimization function from it." +
+					"The sequences, subject to domain constraints, will then be chosen so as to minimize this function.<br>" +
 					"<br>" +
 					"Example:<br>" +
-					"C1		[3*|2*|1*}<br>" +
+					"C1		[3*|2*|1}<br>" +
 					"H1A-loop		[1*|4*}<br>" +
-					"H1A-tail		[5*|6*}"
+					"H1A-tail		[1*(|5*|6*|4|1)}" +
+					"C1_H1A	[3*|2*|(1}[1*)|4*}"
 				}
 		};
 		
@@ -238,12 +271,54 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 					});
 				}
 			};
+		
+			final JPanel RnaDnaToggle = new JPanel();
+			JButton RnaButton = new JButton("RNA Design");
+			JButton DnaButton = new JButton("DNA Design");
+			final JButton[] RnaDnaTogglA = new JButton[]{RnaButton,DnaButton};
+			for(JButton q : RnaDnaTogglA){
+				ButtonSkin.process(DnaDesignGui.this,(JButton)q);
+			}
+			class RnaDnaToggleHandler {
+				void handleToggle(int id){
+					if (modalPanelOpen()){
+						return;
+					}
+					
+					if (id==0){
+						//Switch to RNA
+						CircDesignConfig.setMode(CircDesigNAConfig.RNA_MODE);
+					} else {
+						//Switch to DNA
+						CircDesignConfig.setMode(CircDesigNAConfig.DNA_MODE);
+					}
+					for(int k = 0; k < RnaDnaTogglA.length; k++){
+						RnaDnaTogglA[k].setEnabled(k!=id);
+					}
+					RnaDnaToggle.validate();
+				}
+			}
+			final RnaDnaToggleHandler RnaDnaToggleHandle = new RnaDnaToggleHandler();
+			RnaDnaToggleHandle.handleToggle(1);
+			RnaButton.addActionListener(new ActionListener(){
+				public void actionPerformed(ActionEvent e) {
+					RnaDnaToggleHandle.handleToggle(0);
+				}
+			});
+			DnaButton.addActionListener(new ActionListener(){
+				public void actionPerformed(ActionEvent e) {
+					RnaDnaToggleHandle.handleToggle(1);
+				}
+			});
+			RnaDnaToggle.setLayout(new GridLayout(1,2));
+			RnaDnaToggle.add(RnaButton);
+			RnaDnaToggle.add(DnaButton);
+			
 			JButton ModifyCodonTable = new JButton("Modify Codon Table"){
 				{
 					addActionListener(new ActionListener(){
 						public void actionPerformed(ActionEvent e) {
-							if (getModalPanel()==null){ return;}
-							if (getModalPanel().getComponentCount() > 0){
+							if (modalPanelOpen()){
 								return;
 							}
 							
@@ -256,6 +331,7 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 			RunDesignerBox.add(GoToDesigner);
 			RunDesignerBox.add(DuplicateReaction);
 			RunDesignerBox.add(ModifyCodonTable);
+			RunDesignerBox.add(RnaDnaToggle);
 			RunDesignerBox.add(SavePreviewImage);
 			
 			JComponent holder = skinGroup(RunDesignerBox, "Run Designer");
@@ -305,7 +381,7 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 					setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
 				}
 			};
-			PreviewSeqs = new DNAPreviewStrand(this){
+			PreviewSeqs = new DNAPreviewStrand(this, CircDesignConfig){
 				public void draw(){
 					super.draw();
 				}
@@ -324,11 +400,21 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.A)+">A</font> ("+immcond+" - base immutable)</li>" +
 					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.T)+">T</font> ("+immcond+" - base immutable)</li>" +
 					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.C)+">C</font> ("+immcond+" - base immutable)</li>" +
-					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.D)+">D (isoC)</font> ("+immcond+" - base immutable)</li>" +
-					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.H)+">H (isoG)</font> ("+immcond+" - base immutable)</li>" +
+					//"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.D)+">D (isoC)</font> ("+immcond+" - base immutable)</li>" +
+					//"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.H)+">H (isoG)</font> ("+immcond+" - base immutable)</li>" +
 					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.P)+">P</font> ("+immcond+" - base immutable)</li>" +
 					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.Z)+">Z</font> ("+immcond+" - base immutable)</li>" +
-					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.NONE)+">-</font> (unconstrained)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.NONE)+">-, N</font> (unconstrained)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.R)+">R</font> (see Domain Defs helpfile for specifics)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.Y)+">Y</font> (see Domain Defs helpfile for specifics)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.M)+">M</font> (see Domain Defs helpfile for specifics)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.K)+">K</font> (see Domain Defs helpfile for specifics)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.S)+">S</font> (see Domain Defs helpfile for specifics)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.W)+">W</font> (see Domain Defs helpfile for specifics)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.V)+">V</font> (see Domain Defs helpfile for specifics)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.H)+">H</font> (see Domain Defs helpfile for specifics)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.B)+">B</font> (see Domain Defs helpfile for specifics)</li>" +
+					"<li><font color="+toHexCol(DNAPreviewStrand.ConstraintColors.D)+">D</font> (see Domain Defs helpfile for specifics)</li>" +
 					"</ul>" +
 					"<br>" +
 					"Hotkeys:<br>" +
@@ -383,6 +469,13 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 		
 		validate();
 	}
+	public boolean modalPanelOpen(){
+		if (getModalPanel()==null){ return false;}
+		if (getModalPanel().getComponentCount() > 0){
+			return true;
+		}
+		return false;
+	}
 	private static String toHexCol(float[] g) {
 		return String.format("#%02x%02x%02x",(int)g[0],(int)g[1],(int)g[2]);
 	}
@@ -433,13 +526,13 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 	}
 
 	private JTextArea DomainDef, Molecules, ErrorsOutText;
-	public String CodonTable_GUI=CodonCode.defaultTable;
 	private String DomainDef_CLine="", Molecules_CLine="";
 	private int Molecules_CLine_num;
 	private DNAPreviewStrand PreviewSeqs;
 	private DesignerVisualGraph PreviewGraph;
 	private JPanel PreviewSeqsProxy;
 	private DDSeqDesigner cDesign;
+	private CircDesigNAConfig CircDesignConfig;
 	private void createNewDesigner(){
 		ArrayList<String> inputStrands = new ArrayList<String>();
 		for(String q : Molecules.getText().split("\n")){
@@ -452,7 +545,7 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 			}
 			inputStrands.add(q);
 		}
-		cDesign = DomainDesigner.getDefaultDesigner(inputStrands,DomainDef.getText(),CodonTable_GUI);
+		cDesign = DomainDesigner.getDefaultDesigner(inputStrands,DomainDef.getText(),CircDesignConfig);
 	}
 	private JPanel modalPanel;
 	private ArrayList<Runnable> modalScale = new ArrayList();
@@ -470,12 +563,12 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 	}
 
 	public String getCurrentCodonTable() {
-		return CodonTable_GUI;
+		return CircDesignConfig.customCodonTable;
 	}
 	public void updateCodonTable(String text) {
 		//Test it first
-		new CodonCode(text);
-		CodonTable_GUI = text;
+		new CodonCode(text, CircDesignConfig);
+		CircDesignConfig.customCodonTable = text;
 	}
 
 	public void caretUpdate(CaretEvent e) {

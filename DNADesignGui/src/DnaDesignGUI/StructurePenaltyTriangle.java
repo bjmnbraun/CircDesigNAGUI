@@ -7,8 +7,8 @@ import java.util.Arrays;
 
 import processing.core.PApplet;
 import processing.core.PFont;
-import DnaDesign.DnaDefinition;
 import DnaDesign.DomainSequence;
+import DnaDesign.Config.CircDesigNAConfig;
 import DnaDesign.DomainDesigner.ScorePenalty;
 import DnaDesign.impl.FoldingImpl;
 import DnaDesign.impl.DomainDesignerImpl.MFEHybridScore;
@@ -17,6 +17,7 @@ import DnaDesign.impl.DomainDesignerImpl.SelfSimilarityScore;
 
 public class StructurePenaltyTriangle extends PApplet{
 	private DnaDesignGUI_ThemedApplet mc;
+	private CircDesigNAConfig config;
 	private DomainSequence[] curSeqs;
 	private double[][] nussinovScores;
 	private ArrayList<Point> traceback;
@@ -34,8 +35,9 @@ public class StructurePenaltyTriangle extends PApplet{
 		loop();
 	}
 	
-	public StructurePenaltyTriangle(DnaDesignGUI_ThemedApplet mc){
+	public StructurePenaltyTriangle(DnaDesignGUI_ThemedApplet mc, CircDesigNAConfig config){
 		this.mc = mc;
+		this.config = config;
 	}
 	public void setPenalty(ScorePenalty sp, int[][] domain_sequences, int[][] nullMarkings, FoldingImpl fil){
 		this.fil = fil;
@@ -115,7 +117,7 @@ public class StructurePenaltyTriangle extends PApplet{
 					translate(.5f,.5f);
 					scale(10f/width,10f/height);
 					fillByMarker(seq1,y,domain);
-					text(""+DnaDefinition.displayBase(seq1.base(y, domain)),0,0);
+					text(""+config.monomer.displayBase(seq1.base(y, domain, config.monomer)),0,0);
 					popMatrix();
 					translate(0,area.height/len1);
 				}
@@ -131,7 +133,7 @@ public class StructurePenaltyTriangle extends PApplet{
 					translate(.5f,.5f);
 					scale(10f/width,10f/height);
 					fillByMarker(seq2,x,domain);
-					text(""+DnaDefinition.displayBase(seq2.base(x, domain)),0,0);
+					text(""+config.monomer.displayBase(seq2.base(x, domain, config.monomer)),0,0);
 					popMatrix();
 					translate(area.width/len2,0);
 				}
