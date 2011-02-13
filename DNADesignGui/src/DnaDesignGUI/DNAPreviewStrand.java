@@ -15,6 +15,7 @@ import java.util.TreeMap;
 
 import processing.core.PApplet;
 import processing.core.PFont;
+import processing.core.PMatrix;
 import DnaDesign.DomainStructureBNFTree;
 import DnaDesign.DomainStructureData;
 import DnaDesign.Config.CircDesigNAConfig;
@@ -186,6 +187,7 @@ public class DNAPreviewStrand extends PApplet{
 							DomainStructureBNFTree.readStructure(currentMoleculeName, currentMoleculeString, dsg);
 						} catch (Throwable e){
 							//e.printStackTrace();
+							dsg.structures = null;
 							throw new InvalidDNAMoleculeException(e.getMessage(),0);
 						}
 						//How many particles?
@@ -305,6 +307,7 @@ public class DNAPreviewStrand extends PApplet{
 			private void drawMolecule(boolean actuallyDraw){
 				pushMatrix_drawMolecule();
 				longestHairpin = -1;
+				lastWasHairpin = false;
 				longestHairpin_counterrotation = new float[]{0,1}; //Stays 0 unless a helix is found.
 				try {
 					boolean wasSS = true;
@@ -313,16 +316,20 @@ public class DNAPreviewStrand extends PApplet{
 						wasSS = ds instanceof SingleStranded;
 					}
 				} catch (Throwable e){
-					//e.printStackTrace();
+					e.printStackTrace();
 				} finally {
 					popMatrix_drawMolecule_full();
 				}
 			}
+			private boolean lastWasHairpin = false;
 			private void drawStructure(DomainStructure ds, boolean trueDraw, int hairpinSize, int shaftLength, boolean lastWasSS){
 				if (shaftLength>0 && !(ds instanceof HairpinStem)){
 					throw new RuntimeException("Assertion error: inShaft only valid for continuing hairpinstems");
 				}
 				//TODO: button to turn this on / off
+				boolean oldWasHairpin = lastWasHairpin;
+				lastWasHairpin = ds instanceof HairpinStem; //Replace flag.
+				
 				float wiggleTheta = !dynamicWiggle?PI/4:sin(frameCount/120f*(1+ds.random0*.3f)+ds.random0*TWO_PI)*.3f; 
 				wiggleTheta = lastWasSS?0:wiggleTheta;
 				float HairpinOpenAngle = wiggleTheta;
@@ -369,8 +376,8 @@ public class DNAPreviewStrand extends PApplet{
 					if (shaftLength==0){
 						translate(openingSize*eW/2,0); //Size of opening.
 					}
-					pushMatrix_drawMolecule();
 					if (shaftLength==0){
+						pushMatrix_drawMolecule();
 						rotate(-HALF_PI);
 					}
 
@@ -379,7 +386,6 @@ public class DNAPreviewStrand extends PApplet{
 					int domain2 = dsg.domains[ds.sequencePartsInvolved[1]];
 					//They better be the same lengths...
 					int seqLen = dsd.domainLengths[domain & DNA_SEQ_FLAGSINVERSE];
-
 					
 					//Do we begin a loop?
 					boolean inShaft2 = false;
@@ -414,6 +420,8 @@ public class DNAPreviewStrand extends PApplet{
 							translate(0,eW*openingSize);
 							drawBase(eW,domain2,seqLen-1-k);
 							translate(0,-eW*openingSize/2);
+							fill(0);
+							ellipse(eW/2,-eW*openingSize/4,eW,eW*openingSize/2);
 						}
 						translate(eW*2, 0);
 					}
@@ -436,11 +444,11 @@ public class DNAPreviewStrand extends PApplet{
 							rotate(-HALF_PI);
 							pushMatrix_drawMolecule();
 							{
+								//Recurse through right
 								rotate(PI);
 								translate(eW*openingSize,0);
 								rotate(-HairpinOpenAngle);
 								int rightLoopSize = 0;
-								//Recurse through right
 								for(boolean getLengthPass : new boolean[]{true,false}){
 									for(int k = hs.leftRightBreak+1; k < hs.subStructure.size(); k++){
 										DomainStructure domainStructure = hs.subStructure.get(k);
@@ -460,7 +468,11 @@ public class DNAPreviewStrand extends PApplet{
 							}
 							popMatrix_drawMolecule();
 							//Recurse through left
-							rotate(HairpinOpenAngle);
+							if (hs.leftRightBreak==0){
+								//Don't rotate if it's only a 3' end.
+							} else {
+								rotate(HairpinOpenAngle);
+							}
 							for(int k = 0; k <= hs.leftRightBreak; k++){
 								DomainStructure domainStructure = hs.subStructure.get(k);
 								drawStructure(domainStructure,trueDraw,-1, 0, true);	
@@ -473,9 +485,13 @@ public class DNAPreviewStrand extends PApplet{
 							drawStructure(domainStructure,trueDraw,hs.innerCurveCircumference, newShaftLength, false);	
 						}
 					}
+					if (shaftLength!=0){
+						return; //
+					}
 					popMatrix_drawMolecule();
 					translate(eW*openingSize/2,0); //Size of opening.
 					rotate(deltaTheta);
+
 					/*
 					if (hairpinSize!=-1){
 						rotate(TWO_PI/(hairpinSize+openingSize));
@@ -484,10 +500,16 @@ public class DNAPreviewStrand extends PApplet{
 					//END OF METHOD
 				} else if (ds instanceof ThreePFivePOpenJunc){
 					stroke(0);
+					if (oldWasHairpin){
+						rotate(HALF_PI);
+					}
 					if (trueDraw){	
-						line(-eW,0,eW,0);
-						line(0,-eW,eW,0);
-						line(0,eW,eW,0);
+						fill(0);
+						beginShape();
+						vertex(0,eW);
+						vertex(eW*2,0);
+						vertex(0,-eW);
+						endShape();
 					}
 					markDomain("",eW/2,trueDraw);
 					//ew*4
@@ -496,6 +518,8 @@ public class DNAPreviewStrand extends PApplet{
 					translate(eW*2, 0);
 					rotate(deltaTheta);
 				}
+				
+				lastWasHairpin = ds instanceof HairpinStem; //Replace flag.
 			}
 			private float hairpinDeltaTheta(int hairpinSize, float ringAdd) {
 				return TWO_PI/(hairpinSize+ringAdd);
@@ -505,7 +529,10 @@ public class DNAPreviewStrand extends PApplet{
 				/**
 				 * Note: constraints 
 				 */
-				char constraint = dsd.getConstraint(domain).charAt(isComp?dsd.domainLengths[domain&DNA_SEQ_FLAGSINVERSE]-1-k:k);
+				char constraint = '-';
+				
+				constraint = dsd.getConstraint(domain).charAt(isComp?dsd.domainLengths[domain&DNA_SEQ_FLAGSINVERSE]-1-k:k);
+				
 				int sCol = color(0); //the Good color.
 				switch(Character.toUpperCase(constraint)){
 				case 'G':
@@ -570,6 +597,9 @@ public class DNAPreviewStrand extends PApplet{
 				fill(0);
 				translate(0,-.1f);
 				scale(1f/200);
+				if (!domainName.endsWith("*")){
+					domainName += " ";
+				}
 				textAlign(CENTER,CENTER);
 				//A bit of Linear algebra. Reverse engineer our current rotation and flip.
 				final float[] counterRotation = getCounterRotation();
@@ -689,9 +719,11 @@ public class DNAPreviewStrand extends PApplet{
 		}
 		private int drawMoleculePush = 0;
 		private LinkedList<Integer> drawFlippedStack = new LinkedList();
+		private LinkedList<PMatrix> infMatrixStack = new LinkedList();
 		private void pushMatrix_drawMolecule(){
-			drawMoleculePush++;
+			//infMatrixStack.push(g.getMatrix());
 			pushMatrix();
+			drawMoleculePush++;
 		}
 		private void pushMatrix_drawFlippedMolecule(){
 			pushMatrix_drawMolecule();
@@ -707,6 +739,7 @@ public class DNAPreviewStrand extends PApplet{
 				}
 			}
 			popMatrix();
+			//g.setMatrix(infMatrixStack.pop());
 		}
 		private void popMatrix_drawMolecule_full(){
 			while(drawMoleculePush>0){

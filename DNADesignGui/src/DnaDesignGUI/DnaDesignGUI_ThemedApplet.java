@@ -62,7 +62,7 @@ public abstract class DnaDesignGUI_ThemedApplet extends Applet implements Modali
 		try {
 			string = getParameter(string);
 		} catch (Throwable e){
-			e.printStackTrace();
+			//e.printStackTrace();
 			return Color.black;
 		}
 		if (string==null){
