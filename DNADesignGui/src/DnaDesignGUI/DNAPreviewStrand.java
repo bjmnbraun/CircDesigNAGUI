@@ -370,8 +370,9 @@ public class DNAPreviewStrand extends PApplet{
 					HairpinStem hs = (HairpinStem)ds;
 
 					if (hairpinSize==-1){ //Outer loop
-						if (shaftLength==0) //First stem on outside loop
+						if (shaftLength==0){ //First stem on outside loop
 							rotate(wiggleTheta);
+						}
 					}
 					if (shaftLength==0){
 						translate(openingSize*eW/2,0); //Size of opening.
@@ -473,9 +474,17 @@ public class DNAPreviewStrand extends PApplet{
 							} else {
 								rotate(HairpinOpenAngle);
 							}
+							//The left hand side can curve.
+							boolean lastWasSS2 = true;
 							for(int k = 0; k <= hs.leftRightBreak; k++){
 								DomainStructure domainStructure = hs.subStructure.get(k);
-								drawStructure(domainStructure,trueDraw,-1, 0, true);	
+								if(!(domainStructure instanceof HairpinStem)){
+									lastWasSS2 = true;
+								}
+								drawStructure(domainStructure,trueDraw,-1, 0, lastWasSS2);	
+								if(domainStructure instanceof HairpinStem){
+									lastWasSS2 = false;
+								}
 							}
 						}
 					} else {
