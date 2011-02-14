@@ -425,7 +425,8 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 					"<ul>" +
 					"<li>Shift\"+\" - Zoom In" +
 					"<li>\"-\" - Zoom Out" +
-					"<li>\"d\" - Toggle line or bubble display" +
+					"<li>\"d\" - Turn on / off line or bubble display" +
+					"<li>\"a\" - Turn on / off domain name display" +
 					"</ul>",
 				this,this), BorderLayout.CENTER);
 			

@@ -228,11 +228,18 @@ public class DNAPreviewStrand extends PApplet{
 						moleculeScale *= (1+1f/60f);
 					}
 					if (keyEvent.getKeyChar() == 'd'){
-						if (System.nanoTime()-drawLineStructure_clock>INPUT_CLOCK_INT){
-							drawLineStructure_clock = System.nanoTime();
+						if (System.nanoTime()-keyPressedClock>INPUT_CLOCK_INT){
+							keyPressedClock = System.nanoTime();
 							drawLineStructure = !drawLineStructure;
 						}
 					}	
+					if (keyEvent.getKeyChar() == 'a'){
+						if (System.nanoTime()-keyPressedClock>INPUT_CLOCK_INT){
+							keyPressedClock = System.nanoTime();
+							
+							showDomainNames = !showDomainNames;
+						}
+					}
 					/*
 					if (keyEvent.getKeyChar() == 'w'){
 						if (System.nanoTime()-dynamicWiggle_clock>INPUT_CLOCK_INT){
@@ -583,7 +590,9 @@ public class DNAPreviewStrand extends PApplet{
 				}
 			}
 			private boolean dynamicWiggle = false; private long dynamicWiggle_clock = System.nanoTime();
-			private boolean drawLineStructure = true; private long drawLineStructure_clock = System.nanoTime();
+			private boolean drawLineStructure = true; 
+			private boolean showDomainNames = true; 
+			private long keyPressedClock = System.nanoTime();
 			public void fillA(float[] color){
 				if (drawLineStructure){
 					stroke(color[0],color[1],color[2]);
@@ -600,6 +609,9 @@ public class DNAPreviewStrand extends PApplet{
 						particlepositions[particlepoints][1] = screenY(spacing*mult, 0)/height;
 						particlepoints++;
 					}
+					return;
+				}
+				if (!showDomainNames){
 					return;
 				}
 				pushMatrix();

@@ -119,6 +119,10 @@ public class DesignMultipleTimes {
 		System.out.println("Iteration 1 Score 0");
 		for(int i = 0; i < dsd.domainLengths.length; i++){
 			int len = dsd.domainLengths[i];
+			if (len > 15){
+				System.err.println("Aborted rational design");
+				return;
+			}
 			System.out.println(dsd.getDomainName(i)+">");
 			//Output a domain of that length
 			System.out.println(shortReedWords2005[i].substring(0,len));
