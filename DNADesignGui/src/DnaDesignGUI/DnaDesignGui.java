@@ -128,9 +128,13 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 					" or it can be multiple bases by separating each base with the '+' sign. <i>Min</i> and <i>Max</i> are in units of bases, but can be input as integer percentages of the" +
 					"entire domain by adding the % character (see below for examples). To remove either the <i>Min</i> or <i>Max</i> constraint, set them to a negative value.</li></ul>" +
 					"</li></ul>" +
-					"&#60;bracket&#62;'ed elements are Required fields, and {bracket}'ed elements are Optional. If Sequence Initialization is provided, then the Length field is ignored.<br><br><u>Example:</u><br>" +
+					"&#60;bracket&#62;'ed elements are Required fields, and {bracket}'ed elements are Optional. If Sequence Initialization is provided, then the Length field is ignored.<br><br>" +
+					"Enclosing part of the initial sequence string in square brackets ([]) indicates a region that will be mutated. Outside of square brackets, the sequence is immutable. An exception" +
+					"is the '-' character, which always indicates a mutable base " +
+					"<br><br><u>Example:</u><br>" +
 					"1	8	<br>" +
-					"2	10	GRR[-----]	<br>" +
+					"2	10	GAA[-----]	<br>" +
+					"2a	10	[GRR-----]	<br>" +
 					"a	4	GACC	<br>" +
 					"3	10	[GACTCCAG]	-seq(A,-1,-1,T,-1,3,G,1,-1,C,2,4)<br>" +
 					"4	9	[AAAAAAAAA]	-p<br>" +
@@ -139,7 +143,7 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 					"<br><br>" +
 					"Translates to:<br>" +
 					"Domain '1' is 8bp long and has no constraints. " +
-					"Domain '2' has some constraints imposed, where 'R' is a degenerate basepair. " +
+					"Domain '2' has 3 locked bases (GAA), and the rest is immutable. Domain '2a' constrains its second and third bases to be As or Gs, the rest of its bases are unconstrained, and the first base will be initialized to G." +
 					"Domain 'a' is locked, and will not be modified by the designer. " +
 					"<br>Wrapping a portion of the constraint in square brackets ('[' and ']') flags that the given portion of the domain is mutable. " +
 					"Domain 3 is not locked, but the designer will initially work with the given sequence." +
@@ -534,18 +538,7 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 	private DDSeqDesigner cDesign;
 	private CircDesigNAConfig CircDesignConfig;
 	private void createNewDesigner(){
-		ArrayList<String> inputStrands = new ArrayList<String>();
-		for(String q : Molecules.getText().split("\n")){
-			String[] line = q.split("\\s+");
-			if (line.length == 0){
-				continue;
-			}
-			if (line.length != 2){
-				throw new RuntimeException("Correct Molecule format: <name> <molecule> @ "+line[0]);
-			}
-			inputStrands.add(q);
-		}
-		cDesign = DomainDesigner.getDefaultDesigner(inputStrands,DomainDef.getText(),CircDesignConfig);
+		cDesign = DomainDesigner.getDefaultDesigner(Molecules.getText(),DomainDef.getText(),CircDesignConfig);
 	}
 	private JPanel modalPanel;
 	private ArrayList<Runnable> modalScale = new ArrayList();

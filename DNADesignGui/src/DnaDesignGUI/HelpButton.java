@@ -149,14 +149,11 @@ public class HelpButton extends JButton implements MouseListener{
 		//su.addPreferredSize(comp, 1f, 1f, 0, -28);
 		comp.setVerticalAlignment(JLabel.TOP);
 		
-		JPanel comps = new JPanel();
-		comps.setLayout(new BorderLayout());
-		comps.add(compH,BorderLayout.NORTH);
 		su.addPreferredSize(compH, 1f, 0, 0, 24);
-		comps.add(comp,BorderLayout.CENTER);
-		JScrollPane compHolder = new JScrollPane(comps,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		su.addPreferredSize(compHolder, 1f,1f, 0, -10);
-		su.addPreferredSize(comps, 1f,2f, 0, 0);
+		JScrollPane compHolder = new JScrollPane(comp,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		su.addPreferredSize(compHolder, 1f,.9f, 0, -10);
+		su.addPreferredSize(comp, 1f, 8f, -10, 0);
+		openModalDialog.add(compH);
 		openModalDialog.add(compHolder);
 		mc.addModalScale(new Runnable(){
 			public void run(){
