@@ -16,6 +16,7 @@ import java.util.TreeMap;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PMatrix;
+import DnaDesign.DomainPolymerGraph;
 import DnaDesign.DomainStructureBNFTree;
 import DnaDesign.DomainStructureData;
 import DnaDesign.Config.CircDesigNAConfig;
@@ -185,6 +186,7 @@ public class DNAPreviewStrand extends PApplet{
 						}
 						try {
 							DomainStructureBNFTree.readStructure(currentMoleculeName, currentMoleculeString, dsg);
+							DomainPolymerGraph.readStructure(currentMoleculeName, currentMoleculeString, dpg);
 						} catch (Throwable e){
 							//e.printStackTrace();
 							dsg.structures = null;
@@ -209,6 +211,8 @@ public class DNAPreviewStrand extends PApplet{
 			}
 			private DomainStructureData dsd = new DomainStructureData(config);
 			private DomainStructureBNFTree dsg = new DomainStructureBNFTree(dsd);
+			private DomainPolymerGraph dpg = new DomainPolymerGraph(dsd);
+			private float[] renderPolymerGraph_LengthCache = null; //For storing partial indexes of domains
 			private int[] stopTheWorld = new int[]{0};
 			public void draw(){
 				if (dsg.structures==null){
@@ -238,6 +242,14 @@ public class DNAPreviewStrand extends PApplet{
 							keyPressedClock = System.nanoTime();
 							
 							showDomainNames = !showDomainNames;
+						}
+					}
+					if (keyEvent.getKeyChar() == 'p'){
+						if (System.nanoTime()-keyPressedClock>INPUT_CLOCK_INT){
+							keyPressedClock = System.nanoTime();
+							
+							drawPolymerGraph = !drawPolymerGraph;
+							hasInitialParticleConfiguration = false;
 						}
 					}
 					/*
@@ -317,10 +329,14 @@ public class DNAPreviewStrand extends PApplet{
 				lastWasHairpin = false;
 				longestHairpin_counterrotation = new float[]{0,1}; //Stays 0 unless a helix is found.
 				try {
-					boolean wasSS = true;
-					for(DomainStructure ds : dsg.structures){
-						drawStructure(ds, actuallyDraw, dsg.outerCurveCircum, 0, wasSS && !(ds instanceof HairpinStem));
-						wasSS = ds instanceof SingleStranded;
+					if (drawPolymerGraph){
+						drawPolymerGraph(actuallyDraw);
+					} else {
+						boolean wasSS = true;
+						for(DomainStructure ds : dsg.structures){
+							drawStructure(ds, actuallyDraw, dsg.outerCurveCircum, 0, wasSS && !(ds instanceof HairpinStem));
+							wasSS = ds instanceof SingleStranded;
+						}
 					}
 				} catch (Throwable e){
 					e.printStackTrace();
@@ -328,7 +344,98 @@ public class DNAPreviewStrand extends PApplet{
 					popMatrix_drawMolecule_full();
 				}
 			}
+			private void drawPolymerGraph(boolean actuallyDraw) {
+				int pairColor = color(54,150,153);
+				
+				if (!actuallyDraw){
+					particlepositions[particlepoints][0] = screenX(-1, -1)/width;
+					particlepositions[particlepoints][1] = screenY(-1, -1)/height;
+					particlepoints++;
+
+					particlepositions[particlepoints][0] = screenX(1, 1)/width;
+					particlepositions[particlepoints][1] = screenY(1, 1)/height;
+					particlepoints++;
+				}
+
+				if (renderPolymerGraph_LengthCache==null || renderPolymerGraph_LengthCache.length < dpg.length()){
+					renderPolymerGraph_LengthCache = new float[dpg.length()];
+				}
+				float renderLength = -1;
+				float add5pGapR = 0;
+				for(boolean add5pGap : new boolean[]{false,true}){
+					renderLength = 1;
+					for(int i = 0; i < dpg.length(); i++){
+						renderPolymerGraph_LengthCache[i] = renderLength;
+						int id = dpg.getDomain(i);
+						if (id == -1){
+							renderLength += add5pGapR;
+						} else {
+							renderLength += dsd.domainLengths[id & DNA_SEQ_FLAGSINVERSE];
+						}
+					}
+					
+					//First time, this value is not created. Second, it is valid.
+					if (!add5pGap){
+						add5pGapR = renderLength / 20;
+					}
+				}
+				float dTheta = TWO_PI/renderLength;
+				pushMatrix_drawMolecule();
+				ellipseMode(CORNER);
+				for(int i = 0; i < dpg.length(); i++){
+					int id = dpg.getDomain(i);
+					float numBases = 0;
+					if (id == -1){
+						numBases= 1;
+					} else {
+						numBases= dsd.domainLengths[id & DNA_SEQ_FLAGSINVERSE];
+					}
+					for(int k = 0; k < numBases; k++){
+						float cDLength = renderPolymerGraph_LengthCache[i]+k;
+						float radS = dTheta*cDLength;
+						float x1 = cos(radS);
+						float y1 = sin(radS);
+						stroke(0);
+						noFill();
+						if (id==-1){
+							if (actuallyDraw){
+								pushMatrix_drawMolecule();
+								translate(x1,y1);
+								rotate(radS+HALF_PI);
+								draw3PEnd();
+								popMatrix_drawMolecule();
+							}
+						} else {
+							float radE = dTheta*(cDLength+1);
+							if (actuallyDraw){
+								arc(-1,-1,2,2,radS,radE);
+							}
+							//Paired?
+							int pair = dpg.getDomainPair(i);
+							if (pair!=-1){
+								stroke(pairColor);
+								if (actuallyDraw){
+									int lenPair = dsd.domainLengths[dpg.getDomain(pair)&DNA_SEQ_FLAGSINVERSE];
+									float radP = dTheta*(renderPolymerGraph_LengthCache[pair]+(lenPair-1-k));
+									float x2 = cos(radP);
+									float y2 = sin(radP);
+									line(x1,y1,x2,y2);
+								}
+							}
+							if (actuallyDraw){
+								pushMatrix_drawMolecule();
+								translate(x1,y1);
+								rotate(radS+HALF_PI);
+								line(0,-eW,0,0);
+								popMatrix_drawMolecule();
+							}
+						}	
+					}
+				}
+				popMatrix_drawMolecule();
+			}
 			private boolean lastWasHairpin = false;
+			final float eW = .03f;
 			private void drawStructure(DomainStructure ds, boolean trueDraw, int hairpinSize, int shaftLength, boolean lastWasSS){
 				if (shaftLength>0 && !(ds instanceof HairpinStem)){
 					throw new RuntimeException("Assertion error: inShaft only valid for continuing hairpinstems");
@@ -340,7 +447,6 @@ public class DNAPreviewStrand extends PApplet{
 				float wiggleTheta = !dynamicWiggle?PI/4:sin(frameCount/120f*(1+ds.random0*.3f)+ds.random0*TWO_PI)*.3f; 
 				wiggleTheta = lastWasSS?0:wiggleTheta;
 				float HairpinOpenAngle = wiggleTheta;
-				float eW = .03f;
 				float openingSize = 2f;
 				//Additional space to put on the ring, due to the opening of the loop.
 				float deltaTheta = 0;
@@ -520,12 +626,7 @@ public class DNAPreviewStrand extends PApplet{
 						rotate(HALF_PI);
 					}
 					if (trueDraw){	
-						fill(0);
-						beginShape();
-						vertex(0,eW);
-						vertex(eW*2,0);
-						vertex(0,-eW);
-						endShape();
+						draw3PEnd();
 					}
 					markDomain("",eW/2,trueDraw);
 					//ew*4
@@ -536,6 +637,14 @@ public class DNAPreviewStrand extends PApplet{
 				}
 				
 				lastWasHairpin = ds instanceof HairpinStem; //Replace flag.
+			}
+			private void draw3PEnd() {
+				fill(0);
+				beginShape();
+				vertex(0,eW);
+				vertex(eW*2,0);
+				vertex(0,-eW);
+				endShape();
 			}
 			private float hairpinDeltaTheta(int hairpinSize, float ringAdd) {
 				return TWO_PI/(hairpinSize+ringAdd);
@@ -591,7 +700,8 @@ public class DNAPreviewStrand extends PApplet{
 			}
 			private boolean dynamicWiggle = false; private long dynamicWiggle_clock = System.nanoTime();
 			private boolean drawLineStructure = true; 
-			private boolean showDomainNames = true; 
+			private boolean showDomainNames = true;
+			private boolean drawPolymerGraph = false;
 			private long keyPressedClock = System.nanoTime();
 			public void fillA(float[] color){
 				if (drawLineStructure){

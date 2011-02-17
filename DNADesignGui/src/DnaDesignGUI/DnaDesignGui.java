@@ -427,6 +427,7 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 					"<li>\"-\" - Zoom Out" +
 					"<li>\"d\" - Turn on / off line or bubble display" +
 					"<li>\"a\" - Turn on / off domain name display" +
+					"<li>\"p\" - Turn on / off Circular Polymer Graph display mode" +
 					"</ul>",
 				this,this), BorderLayout.CENTER);
 			

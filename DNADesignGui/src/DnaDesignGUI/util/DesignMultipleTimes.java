@@ -78,6 +78,12 @@ public class DesignMultipleTimes {
 		} else {
 			System.out.println("Entering Evaluate mode");
 			if (args[0].equals("-evaluate")){
+				boolean goNupack = true;
+				if (args.length >= 2){
+					if (args[1].equals("-nopack")){
+						goNupack = false;
+					}
+				}
 				for(int i = 1; i <= numTimesToRun; i++){
 					for(String rprefix : new String[]{prefix,prefix+"rnd",prefix+"ra"}){
 						File out2 = new File(targetDir+File.separator+rprefix+i+".des");
@@ -87,7 +93,7 @@ public class DesignMultipleTimes {
 						}
 						File out3 = new File(targetDir+File.separator+rprefix+i+".eval");
 						System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream(out3))));
-						RunEvaluation(out2,Molecules,dsd,maximumComplexSize);
+						RunEvaluation(out2,Molecules,dsd,maximumComplexSize, goNupack);
 						System.err.println("Evaluated "+i);
 						System.out.close();
 					}
@@ -160,22 +166,30 @@ public class DesignMultipleTimes {
 		
 	}
 
-	private static void RunEvaluation(File out3, String molecules, DomainStructureData dsd, int maximumComplexSize) throws IOException {
+	public static void RunEvaluation(File out3, String molecules, DomainStructureData dsd, int maximumComplexSize, boolean goNupack) throws IOException {
 		Scanner in = new Scanner(out3);
-		System.out.println("ITR\t\tSCORE\t\tNUPACK");
+		System.out.print("ITR\t\tSCORE");
+		if (goNupack){
+			System.out.print("\t\tNUPACK");
+		}
+		System.out.println();
 		while(in.hasNextLine()){
 			String line = in.nextLine();
 			System.out.flush();
 			if (line.startsWith("Iteration")){
 				int i = new Integer(line.split("\\s+")[1]);
 				double score = new Double(line.split("\\s+")[3]);
-				double nupack = getDefectScore(in,dsd,molecules,maximumComplexSize);
-				System.out.printf("%d\t\t%.3f\t\t%.3f",i,score,nupack);
+				System.out.printf("%d\t\t%.3f",i,score);
+				if (goNupack){
+					double nupack = getDefectScore(in,dsd,molecules,maximumComplexSize);
+					System.out.printf("\t\t%.3f",nupack);
+				}
 				System.out.println();
 			}	
 		}
 		in.close();
 	}
+	
 
 	private static double getDefectScore(Scanner in, DomainStructureData dsd, String molecules, int maximumComplexSize) throws IOException {
 		String[] molecule = new String[1];
@@ -434,12 +448,12 @@ public class DesignMultipleTimes {
 		public String ID;
 	}
 
-	private static String readToken(Scanner in) {
+	public static String readToken(Scanner in) {
 		String line = in.nextLine();
 		return line.split("\\s+")[0];
 	}
 
-	private static String readToEnd(Scanner in) {
+	public static String readToEnd(Scanner in) {
 		StringBuffer toRet = new StringBuffer();
 		while(in.hasNextLine()){
 			String line = in.nextLine();
