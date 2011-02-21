@@ -10,15 +10,28 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Scanner;
+import java.util.TreeMap;
 
+import DnaDesign.AbstractDomainDesignTarget;
 import DnaDesign.DDSeqDesigner;
+import DnaDesign.DesignIntermediateReporter;
 import DnaDesign.DesignerOptions;
 import DnaDesign.DomainDesigner;
 import DnaDesign.DomainDesigner_SharedUtils;
 import DnaDesign.DomainSequence;
 import DnaDesign.DomainStructureData;
+import DnaDesign.NAFolding;
 import DnaDesign.Config.CircDesigNAConfig;
+import DnaDesign.DomainDesigner.ScorePenalty;
+import DnaDesign.impl.DomainDesignerImpl;
+import DnaDesign.impl.FoldingImpl;
+import DnaDesign.impl.DomainDesignerImpl.HairpinOpening;
+import DnaDesign.impl.DomainDesignerImpl.MFEHybridScore;
+import DnaDesign.impl.DomainDesignerImpl.SelfFold;
+import DnaDesign.impl.DomainDesignerImpl.SelfSimilarityScore;
+import DnaDesign.impl.DomainDesignerImpl.VariousSequencePenalties;
 
 public class DesignMultipleTimes {
 	/**
@@ -40,6 +53,7 @@ public class DesignMultipleTimes {
 		double numSecondsEach = new Double(readToken(in));
 		int maximumComplexSize = new Integer(readToken(in));
 		double tournamentInterval = new Double(readToken(in));
+		boolean runGA = new Integer(readToken(in))==1;
 		String targetDir = in.nextLine();
 		String prefix = in.nextLine();
 		String Domains = readToEnd(in);
@@ -47,34 +61,37 @@ public class DesignMultipleTimes {
 		in.close();
 		
 		CircDesigNAConfig config = new CircDesigNAConfig();
+
+		
 		DomainStructureData dsd = new DomainStructureData(config);
 		DomainStructureData.readDomainDefs(Domains, dsd);
 		if (args.length==0){
+			new File(targetDir).mkdir();
 			System.out.println("Entering design mode");
 			for(int i = 1; i <= numTimesToRun; i++){
-
-				File out2 = new File(targetDir+File.separator+prefix+i+".des");
-				System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream(out2))));
 				DDSeqDesigner<DesignerOptions> defaultDesigner = DomainDesigner.getDefaultDesigner(Molecules, Domains, config);
 				DesignerOptions options = defaultDesigner.getOptions();
 				options.population_size.setState(popSize);
 				options.selfSimilarityPenalty.setState(selfSimilarOpt);
 				options.resourcePerMember.setState(tournamentInterval);
+				options.standardUseGA.setState(runGA);
+
+				File out2 = new File(targetDir+File.separator+prefix+i+".des");
+				System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream(out2))));
 				designUsingCircDesigNA(defaultDesigner,numSecondsEach);
 				System.err.println("Designed "+i);
 				System.err.flush();
 				System.out.close();
-				
-				out2 = new File(targetDir+File.separator+prefix+"rnd"+i+".des");
-				System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream(out2))));
-				outputRandomDesigns(dsd);
-				System.out.close();
-				
-				out2 = new File(targetDir+File.separator+prefix+"ra"+i+".des");
-				System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream(out2))));
-				outputRationalDesign(dsd);
-				System.out.close();
 			}
+			File out2 = new File(targetDir+File.separator+prefix+"rnd"+1+".des");
+			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream(out2))));
+			outputRandomDesigns(dsd);
+			System.out.close();
+			
+			out2 = new File(targetDir+File.separator+prefix+"ra"+1+".des");
+			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream(out2))));
+			outputRationalDesign(dsd);
+			System.out.close();
 		} else {
 			System.out.println("Entering Evaluate mode");
 			if (args[0].equals("-evaluate")){
@@ -98,8 +115,108 @@ public class DesignMultipleTimes {
 						System.out.close();
 					}
 				}
+			} else if (args[0].equals("-evaluate_self")){
+				DesignerOptions options = DesignerOptions.getDefaultOptions();
+				options.selfSimilarityPenalty.setState(selfSimilarOpt);
+				
+				for(int i = 1; i <= numTimesToRun; i++){
+					for(String rprefix : new String[]{prefix,prefix+"rnd",prefix+"ra"}){
+						File out2 = new File(targetDir+File.separator+rprefix+i+".des");
+						if (!out2.exists()){
+							System.err.println("Could not find file "+rprefix+i+".des");
+							continue;
+						}
+						File out3 = new File(targetDir+File.separator+rprefix+i+".seval");
+						System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream(out3))));
+						RunSelfEvaluation(out2,Molecules,dsd,options);
+						System.out.close();
+					}
+				}
 			}
 		}
+	}
+
+	private static void RunSelfEvaluation(File out2, String molecules, DomainStructureData dsd, DesignerOptions options) throws FileNotFoundException {
+		CircDesigNAConfig config = new CircDesigNAConfig();
+		AbstractDomainDesignTarget target = new AbstractDomainDesignTarget(dsd, config);
+		{
+			for(String k : molecules.split("\n")){ //newlines have been sanitized
+				String[] u = k.split("\\s+");
+				target.addTargetStructure(u[0], u[1]);
+			}
+		}
+		NAFolding fli = new FoldingImpl(config);
+		DomainDesignerImpl ddi = new DomainDesignerImpl(fli,config);
+		DesignIntermediateReporter DIR = new DesignIntermediateReporter();
+		
+		//generate domain from dsd.
+		int[] domainLengths = dsd.domainLengths;
+		int[][] domain = new int[domainLengths.length][];
+		int[][] nulldomainMark = new int[domainLengths.length][];
+		for(int i = 0; i < domain.length; i++){
+			domain[i] = new int[domainLengths[i]];
+			nulldomainMark[i] = new int[domainLengths[i]];
+		}
+		
+		List<ScorePenalty> listPenalties = ddi.listPenalties(target, DIR, domain, options);
+		
+		//evaluate scores for all designed.
+		Scanner in = new Scanner(out2);
+		String[] Headers = new String[]{"ITR","Hybrid","SelfSimilar","HairpinOpen","SelfFold","Other","TOTAL"};
+		System.out.printf("%-20s%-20s%-20s%-20s%-20s%-20s%-20s",(Object[])Headers);
+		System.out.println();
+		while(in.hasNextLine()){
+			String line = in.nextLine();
+			System.out.flush();
+			if (line.startsWith("Iteration")){
+				System.out.printf("%-20s",line.split("\\s+")[1]);
+
+				GetSelfEvaluation(in,dsd,listPenalties,domain,nulldomainMark,molecules);
+			}
+		}
+		in.close();
+	}
+
+	private static final int GS_MFEHyb = 0, GS_SS = GS_MFEHyb+1, GS_HP = GS_SS+1, GS_SF = GS_HP+1, GS_OTHER=GS_SF+1, GS_NUM=GS_OTHER+1;
+	
+	private static void GetSelfEvaluation(Scanner in, DomainStructureData dsd,
+			List<ScorePenalty> listPenalties, int[][] domain,
+			int[][] nulldomainMark, String molecules) {
+		
+		parseDnaDesignOutput(dsd, in, molecules, domain);
+		
+		double[] score = new double[GS_NUM];
+		double total = 0;
+		for(ScorePenalty k : listPenalties){
+			int num = -1;
+			if (k instanceof MFEHybridScore){
+				num = GS_MFEHyb;
+			}
+			if (k instanceof HairpinOpening){
+				num = GS_HP;
+			}
+			if (k instanceof SelfSimilarityScore){
+				num = GS_SS;
+			}
+			if (k instanceof SelfFold){
+				num = GS_SF;
+			}
+			if (k instanceof VariousSequencePenalties){
+				num = GS_OTHER;
+			}
+			if (num==-1){
+				System.err.println(k.getClass());
+			}
+			double sc = k.getScore(domain, nulldomainMark);
+			score[num] += sc;
+			total += sc;
+		}
+		for(int k = 0; k < score.length; k++){
+			System.out.printf("%-20.3f",score[k]);
+		}
+		System.out.printf("%-20.3f",total);
+		System.out.println();
+		
 	}
 
 	private static void outputRandomDesigns(DomainStructureData dsd) {
@@ -122,13 +239,16 @@ public class DesignMultipleTimes {
 	};
 
 	private static void outputRationalDesign(DomainStructureData dsd) {
-		System.out.println("Iteration 1 Score 0");
 		for(int i = 0; i < dsd.domainLengths.length; i++){
 			int len = dsd.domainLengths[i];
 			if (len > 15){
 				System.err.println("Aborted rational design");
 				return;
 			}
+		}
+		System.out.println("Iteration 1 Score 0");
+		for(int i = 0; i < dsd.domainLengths.length; i++){
+			int len = dsd.domainLengths[i];
 			System.out.println(dsd.getDomainName(i)+">");
 			//Output a domain of that length
 			System.out.println(shortReedWords2005[i].substring(0,len));
@@ -168,21 +288,22 @@ public class DesignMultipleTimes {
 
 	public static void RunEvaluation(File out3, String molecules, DomainStructureData dsd, int maximumComplexSize, boolean goNupack) throws IOException {
 		Scanner in = new Scanner(out3);
-		System.out.print("ITR\t\tSCORE");
+		System.out.printf("%-20s%-20s","ITR","SCORE");
 		if (goNupack){
-			System.out.print("\t\tNUPACK");
+			System.out.printf("%-20s","NUPACK");
 		}
 		System.out.println();
+		ArrayList lastMoleculeParse = new ArrayList();
 		while(in.hasNextLine()){
 			String line = in.nextLine();
 			System.out.flush();
 			if (line.startsWith("Iteration")){
 				int i = new Integer(line.split("\\s+")[1]);
 				double score = new Double(line.split("\\s+")[3]);
-				System.out.printf("%d\t\t%.3f",i,score);
+				System.out.printf("%-20d%-20.3f",i,score);
 				if (goNupack){
-					double nupack = getDefectScore(in,dsd,molecules,maximumComplexSize);
-					System.out.printf("\t\t%.3f",nupack);
+					double nupack = getDefectScore(in,dsd,molecules,maximumComplexSize, lastMoleculeParse);
+					System.out.printf("%-20e",nupack);
 				}
 				System.out.println();
 			}	
@@ -191,57 +312,29 @@ public class DesignMultipleTimes {
 	}
 	
 
-	private static double getDefectScore(Scanner in, DomainStructureData dsd, String molecules, int maximumComplexSize) throws IOException {
-		String[] molecule = new String[1];
-		StringBuffer seq = new StringBuffer();
+	private static double getDefectScore(Scanner in, DomainStructureData dsd, String molecules, int maximumComplexSize, ArrayList<TestMolecule> lastMoleculeParse) throws IOException {
 		int[][] domains = new int[dsd.domainLengths.length][];
 		for(int i = 0; i < domains.length; i++){
 			domains[i] = new int[dsd.domainLengths[i]];
 		}
-		while(in.hasNextLine()){
-			String line2 = in.nextLine();
-			if (line2.trim().equals("")){
+		
+		ArrayList<TestMolecule> moleculeParse = parseDnaDesignOutput(dsd,in,molecules,domains);
+		
+		boolean equal = true;
+		for(int i = 0; i < lastMoleculeParse.size(); i++){
+			if (!lastMoleculeParse.get(i).equals(moleculeParse.get(i))){
+				equal = false;
 				break;
 			}
-			if (line2.contains(">")){
-				addMolecule(molecule,dsd,seq,domains);
-				seq = new StringBuffer();
-				molecule[0] = line2.substring(0,line2.length()-1);
-			} else {
-				//Sequence containing line
-				seq.append(line2);
+		}
+		if(lastMoleculeParse.size()>0){
+			if (equal){
+				return -1;
 			}
 		}
-		addMolecule(molecule,dsd,seq,domains);
+		lastMoleculeParse.clear();
+		lastMoleculeParse.addAll(moleculeParse);
 		
-		//Ok, put molecules together
-		ArrayList<DomainSequence> alreadyPrintedSequences = new ArrayList();
-		ArrayList<TestMolecule> moleculeParse = new ArrayList();
-		for(String q : molecules.split("\n")){
-			String[] a = q.split("\\s+");
-			int ct = 0;
-			splitLoop: for(String subStrand : a[1].split("}")){
-				DomainSequence ds = new DomainSequence();
-				ds.setDomains(subStrand,dsd,null);
-				for(DomainSequence g : alreadyPrintedSequences){
-					if (g.equals(ds)){
-						continue splitLoop;
-					}
-				}
-				alreadyPrintedSequences.add(ds);
-				
-				TestMolecule mol = new TestMolecule();
-				mol.ID = a[0]+ct++;
-				mol.molecule = subStrand;
-				seq = new StringBuffer();
-				int len = ds.length(domains);
-				for(int i = 0; i < len; i++){
-					seq.append(dsd.Std.monomer.displayBase(ds.base(i, domains, dsd.Std.monomer)));
-				}
-				mol.seq = seq.toString();
-				moleculeParse.add(mol);
-			}
-		}
 		
 		//System.out.println(Arrays.deepToString(domains));
 		
@@ -266,28 +359,78 @@ public class DesignMultipleTimes {
 			}
 			conOut.close();
 
-			runProcess(System.getProperty("NUPACKHOME")+"/bin/complexes -material dna -mfe "+prefix,
-					new String[]{
-				"NUPACKHOME="+System.getProperty("NUPACKHOME")},
-			nupackDir);
-			
 			/*
-			runProcess(System.getProperty("NUPACKHOME")+"/bin/complexes -material dna -pairs "+prefix,
-					new String[]{
-				"NUPACKHOME="+System.getProperty("NUPACKHOME")},
-			nupackDir);
-			
-			runProcess(System.getProperty("NUPACKHOME")+"/bin/concentrations -pairs "+prefix,
+			runProcess(System.getProperty("NUPACKHOME")+"/bin/complexes -material dna -mfe "+prefix,
 					new String[]{
 				"NUPACKHOME="+System.getProperty("NUPACKHOME")},
 			nupackDir);
 			*/
 			
+			
+			runProcess(System.getProperty("NUPACKHOME")+"/bin/complexes -material dna -pairs "+prefix,
+					new String[]{
+				"NUPACKHOME="+System.getProperty("NUPACKHOME")},
+			nupackDir);
+			
+			runProcess(System.getProperty("NUPACKHOME")+"/bin/concentrations -sort 0 "+prefix,
+					new String[]{
+				"NUPACKHOME="+System.getProperty("NUPACKHOME")},
+			nupackDir);
 		}
 		
 		//Ok, nupack ran. Analyze!
 		return calculateDefectScoreFromNupackOutput(moleculeParse, dsd,"nupackTest/"+prefix);
 	}
+	private static ArrayList<TestMolecule> parseDnaDesignOutput(DomainStructureData dsd, Scanner in, String molecules, int[][] domains) {
+			String[] molecule = new String[1];
+			StringBuffer seq = new StringBuffer();
+			while(in.hasNextLine()){
+				String line2 = in.nextLine();
+				if (line2.trim().equals("")){
+					break;
+				}
+				if (line2.contains(">")){
+					addMolecule(molecule,dsd,seq,domains);
+					seq = new StringBuffer();
+					molecule[0] = line2.substring(0,line2.length()-1);
+				} else {
+					//Sequence containing line
+					seq.append(line2);
+				}
+			}
+			addMolecule(molecule,dsd,seq,domains);
+
+			//Ok, put molecules together
+			ArrayList<DomainSequence> alreadyPrintedSequences = new ArrayList();
+			ArrayList<TestMolecule> moleculeParse = new ArrayList();
+			for(String q : molecules.split("\n")){
+				String[] a = q.split("\\s+");
+				int ct = 0;
+				splitLoop: for(String subStrand : a[1].split("}")){
+					DomainSequence ds = new DomainSequence();
+					ds.setDomains(subStrand,dsd,null);
+					for(DomainSequence g : alreadyPrintedSequences){
+						if (g.equals(ds)){
+							continue splitLoop;
+						}
+					}
+					alreadyPrintedSequences.add(ds);
+
+					TestMolecule mol = new TestMolecule();
+					mol.ID = a[0]+ct++;
+					mol.molecule = subStrand;
+					seq = new StringBuffer();
+					int len = ds.length(domains);
+					for(int i = 0; i < len; i++){
+						seq.append(dsd.Std.monomer.displayBase(ds.base(i, domains, dsd.Std.monomer)));
+					}
+					mol.seq = seq.toString();
+					moleculeParse.add(mol);
+				}
+			}
+			return moleculeParse;
+	}
+
 	private static void runProcess(String string, String[] env,	File nupackDir) throws IOException {
 			System.err.println(">"+string);
 	
@@ -330,7 +473,19 @@ public class DesignMultipleTimes {
 			ArrayList<TestMolecule> moleculeParse, DomainStructureData dsd,
 			String filePrefix) throws FileNotFoundException {
 		LinkedList<TestComplex> complex = new LinkedList();
-		if (true){
+		//Get concentrations
+		Scanner inConc = new Scanner(new File(filePrefix+".eq"));
+		TreeMap<Integer, Double> concStructures = new TreeMap();
+		while(inConc.hasNextLine()){
+			String line2 = inConc.nextLine();
+			if (line2.startsWith("%") || line2.trim().equals("")){
+				continue;
+			}
+			String[] line = line2.split("\\s+");
+			concStructures.put(new Integer(line[0]),new Double(line[line.length-1]));
+		}
+		//System.err.println(concStructures);
+		if (false){
 			Scanner inkey = new Scanner(new File(filePrefix+".ocx-key"));
 
 			while(inkey.hasNextLine()){
@@ -358,19 +513,21 @@ public class DesignMultipleTimes {
 			}
 			inkey.close();
 		}
-		Scanner inPpairs = new Scanner(new File(filePrefix+".ocx-mfe"));
+		Scanner inPpairs = new Scanner(new File(filePrefix+".cx-epairs"));
 		//Generate pseudo domains from dsd
 		int[][] domain = new int[dsd.domainLengths.length][];
 		for(int i = 0; i < domain.length; i++){
 			domain[i] = new int[dsd.domainLengths[i]];
 		}
 		double TOTALSCORE = 0;
+		//Make a single giant molecule for all strands
 		StringBuffer dsstr = new StringBuffer();
 		for(int i = 0; i < moleculeParse.size(); i++){
 			dsstr.append(moleculeParse.get(i).molecule);
 			dsstr.append("|");
 		}
-		//TestComplex toAnalyze = new TestComplex(dsstr.toString(),dsd,"1");
+		TestComplex toAnalyze = new TestComplex(dsstr.toString(),dsd,"1");
+		int concID = 0;
 		while(inPpairs.hasNextLine()){
 			String line = inPpairs.nextLine();
 			if (line.startsWith("%")){
@@ -379,10 +536,14 @@ public class DesignMultipleTimes {
 			if (line.trim().equals("")){
 				continue;
 			}
+			concID++;
 			//int num = new Integer(line);
-			double fe = new Double(inPpairs.nextLine());
-			TestComplex toAnalyze = complex.removeFirst();
+			//double fe = new Double(inPpairs.nextLine());
+			if (false){
+				toAnalyze = complex.removeFirst();
+			}
 			String struct = inPpairs.nextLine();
+			double structureCont = 0;
 			for(; inPpairs.hasNextLine(); ){
 				String nextLine = inPpairs.nextLine();
 				if (nextLine.startsWith("%")){
@@ -391,7 +552,7 @@ public class DesignMultipleTimes {
 				String[] line2 = nextLine.split("\\s+");
 				int i = new Integer(line2[0])-1;
 				int j = new Integer(line2[1])-1;
-				//double p = new Double(line2[2]);
+				double p = new Double(line2[2]);
 				DomainSequence ds = toAnalyze.ds;
 				int len = ds.length(domain);
 				if (j < len){
@@ -402,14 +563,21 @@ public class DesignMultipleTimes {
 					int offset2 = ds.offsetInto(j, domain, false);
 					
 					if (!DomainDesigner_SharedUtils.isAlignedAndShouldPair(ds, i, ds, j, domain)){
-						System.err.print("Shouldn't pair: ");
-						TOTALSCORE += 1;
+						//System.err.print("Shouldn't pair: ");
+						//TOTALSCORE += 1;
+						structureCont += p;
 					} else {
-						System.err.print("Did pair: ");
+						//System.err.print("Did pair: ");
 					}
-					System.err.println(dsd.getDomainName(domain1)+" "+offset1+" "+dsd.getDomainName(domain2)+" "+offset2);
+					//System.err.println(dsd.getDomainName(domain1)+" "+offset1+" "+dsd.getDomainName(domain2)+" "+offset2);
 				}
 			}
+			//System.err.println(structureCont+" "+concStructures.get(concID));
+			double conc = 0;
+			if (concStructures.containsKey(concID)){
+				conc = concStructures.get(concID);
+			}
+			TOTALSCORE += structureCont * conc;
 			
 		}
 		inPpairs.close();
@@ -446,6 +614,10 @@ public class DesignMultipleTimes {
 		public String seq;
 		public String molecule;
 		public String ID;
+		public boolean equals(Object o){
+			TestMolecule b = (TestMolecule)o;
+			return b.seq.equals(seq) && molecule.equals(b.molecule);
+		}
 	}
 
 	public static String readToken(Scanner in) {
