@@ -32,6 +32,7 @@ import DnaDesign.impl.DomainDesignerImpl.MFEHybridScore;
 import DnaDesign.impl.DomainDesignerImpl.SelfFold;
 import DnaDesign.impl.DomainDesignerImpl.SelfSimilarityScore;
 import DnaDesign.impl.DomainDesignerImpl.VariousSequencePenalties;
+import DnaDesign.test.RunNupackTool;
 
 public class DesignMultipleTimes {
 	/**
@@ -337,46 +338,23 @@ public class DesignMultipleTimes {
 		
 		
 		//System.out.println(Arrays.deepToString(domains));
-		
-		//Nupack score
-		File nupackDir = new File("nupackTest/");
-		String prefix = "nupack"+System.nanoTime();
-		System.err.println(prefix);
-		nupackDir.mkdirs();
-		File nupackList = new File("nupackTest/"+prefix+".in");
-		{
-			PrintWriter nuPackListOut = new PrintWriter(new FileWriter(nupackList));
-			nuPackListOut.println(moleculeParse.size());
-			for(TestMolecule k : moleculeParse){
-				nuPackListOut.println(k.seq);
-			}
-			nuPackListOut.println(maximumComplexSize);
-			nuPackListOut.close();
-			
-			PrintWriter conOut = new PrintWriter(new FileWriter(new File("nupackTest/"+prefix+".con")));
-			for(int i = 0; i < moleculeParse.size(); i++){
-				conOut.println("5e-6");
-			}
-			conOut.close();
 
-			/*
-			runProcess(System.getProperty("NUPACKHOME")+"/bin/complexes -material dna -mfe "+prefix,
-					new String[]{
-				"NUPACKHOME="+System.getProperty("NUPACKHOME")},
-			nupackDir);
-			*/
-			
-			
-			runProcess(System.getProperty("NUPACKHOME")+"/bin/complexes -material dna -pairs "+prefix,
-					new String[]{
-				"NUPACKHOME="+System.getProperty("NUPACKHOME")},
-			nupackDir);
-			
-			runProcess(System.getProperty("NUPACKHOME")+"/bin/concentrations -sort 0 "+prefix,
-					new String[]{
-				"NUPACKHOME="+System.getProperty("NUPACKHOME")},
-			nupackDir);
+		String prefix = "nupack"+System.nanoTime();
+		//Nupack score
+
+		StringBuffer molecules1 = new StringBuffer();
+		molecules1.append(moleculeParse.size()+"\n");
+		for(TestMolecule k : moleculeParse){
+			molecules1.append(k.seq+"\n");
 		}
+		StringBuffer concs = new StringBuffer();
+		for(int i = 0; i < moleculeParse.size(); i++){
+			concs.append("5e-6"+"\n");
+		}
+		
+		File nupackDir = new File("nupackTest/");
+		
+		RunNupackTool.runNupack(molecules1.toString(), concs.toString(), maximumComplexSize, prefix, true, nupackDir);
 		
 		//Ok, nupack ran. Analyze!
 		return calculateDefectScoreFromNupackOutput(moleculeParse, dsd,"nupackTest/"+prefix);
@@ -430,44 +408,7 @@ public class DesignMultipleTimes {
 			}
 			return moleculeParse;
 	}
-
-	private static void runProcess(String string, String[] env,	File nupackDir) throws IOException {
-			System.err.println(">"+string);
 	
-			Process p = Runtime.getRuntime().exec(string,env,nupackDir);
-			if(false){
-				final Scanner in2 = new Scanner(p.getInputStream());
-				new Thread(){
-					public void run(){
-						try {
-							while(in2.hasNextLine()){
-								System.err.println(in2.nextLine());
-							}
-						} catch (Throwable e){
-
-						}
-					}
-				}.start();
-				try {
-					p.waitFor();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				in2.close();
-			} else {
-				try {
-					p.waitFor();
-					p.getOutputStream().close();
-					p.getInputStream().close();
-				    p.getErrorStream().close();
-				} catch (Throwable e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				p.destroy();
-			}
-	}
 
 	private static double calculateDefectScoreFromNupackOutput(
 			ArrayList<TestMolecule> moleculeParse, DomainStructureData dsd,
