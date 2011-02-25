@@ -4,10 +4,8 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -354,7 +352,7 @@ public class DesignMultipleTimes {
 		
 		File nupackDir = new File("nupackTest/");
 		
-		RunNupackTool.runNupack(molecules1.toString(), concs.toString(), maximumComplexSize, prefix, true, nupackDir);
+		RunNupackTool.runNupack(molecules1.toString(), concs.toString(), maximumComplexSize, prefix, RunNupackTool.OPCODE_COMPLEXES_AND_CONC, nupackDir);
 		
 		//Ok, nupack ran. Analyze!
 		return calculateDefectScoreFromNupackOutput(moleculeParse, dsd,"nupackTest/"+prefix);
