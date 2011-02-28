@@ -244,7 +244,7 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 				}
 			}
 
-			List<ScorePenalty> listPenalties = ddi.listPenalties(target, dir, domain, DesignerOptions.getDefaultOptions());
+			List<ScorePenalty> listPenalties = ddi.listPenalties(target, dir, domain, DesignerOptions.getDefaultOptions(), dsd);
 			for(ScorePenalty sp : listPenalties){
 				penalties.add(new PenaltyObject(sp, dsd));	
 			}
@@ -263,19 +263,7 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 		public String myString;
 		private ScorePenalty sp;
 		public PenaltyObject(ScorePenalty sp, DomainStructureData dsd){
-			DomainSequence[] seqs = sp.getSeqs();
-			myString = sp.getClass().getSimpleName();
-			if (seqs.length>0){
-				myString += " : ";
-				for(int k = 0; k < seqs.length; k++){
-					myString += seqs[k].toString(dsd);
-					if (k + 1 < seqs.length){
-						myString += " vs ";
-					}
-				}
-			} else {
-				myString += " (On all molecules)";
-			}
+			myString = sp.toString(dsd);
 			this.sp = sp;
 		}
 		public String toString(){
