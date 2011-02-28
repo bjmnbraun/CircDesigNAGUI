@@ -381,6 +381,7 @@ public class DNAPreviewStrand extends PApplet{
 				}
 				float dTheta = TWO_PI/renderLength;
 				pushMatrix_drawMolecule();
+				rotate(PI); //Start with the entry point at stage left, because people read from left to right.
 				ellipseMode(CORNER);
 				for(int i = 0; i < dpg.length(); i++){
 					int id = dpg.getDomain(i);
@@ -427,6 +428,9 @@ public class DNAPreviewStrand extends PApplet{
 								translate(x1,y1);
 								rotate(radS+HALF_PI);
 								line(0,-eW,0,0);
+								if (k == numBases / 2){
+									markDomain(dsd.getDomainName(id),0,true);
+								}
 								popMatrix_drawMolecule();
 							}
 						}	

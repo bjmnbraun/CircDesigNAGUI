@@ -113,7 +113,7 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 					"<tr><th>Codes</th><th>Possible Bases</th></tr>" +
 					"<tr><td>N -</td><td> no constraints</td></tr>" +
 					"<tr><td>R</td><td> A, G</td></tr>" +
-					"<tr><td>Y</td><td> C, G</td></tr>" +
+					"<tr><td>Y</td><td> C, T</td></tr>" +
 					"<tr><td>M</td><td> A, C</td></tr>" +
 					"<tr><td>K</td><td> G, T</td></tr>" +
 					"<tr><td>S</td><td> C, G</td></tr>" +
