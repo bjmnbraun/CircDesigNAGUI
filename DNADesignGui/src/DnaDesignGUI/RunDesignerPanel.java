@@ -71,35 +71,43 @@ public class RunDesignerPanel {
 							}
 						}
 					});
-				} else if (option instanceof SeqDesignerOption.Double || option instanceof SeqDesignerOption.Integer){
+				} else if (option instanceof SeqDesignerOption.Double || option instanceof SeqDesignerOption.Integer || option instanceof SeqDesignerOption.Str){
 					final SeqDesignerOption.Double dOption;
 					final SeqDesignerOption.Integer iOption;
-					if (!(option instanceof SeqDesignerOption.Integer)){
-						dOption = (SeqDesignerOption.Double) option;
-						iOption = null;
-					} else{
-						iOption = (SeqDesignerOption.Integer) option;
-						dOption = null;
-					}
+					final SeqDesignerOption.Str sOption;
 					//Add a value field
 					final JTextField jta = new JTextField(12);
+					if (option instanceof SeqDesignerOption.Double){
+						dOption = (SeqDesignerOption.Double) option;
+						jta.setText(dOption.getState()+"");
+						iOption = null;
+						sOption = null;
+					} else if (option instanceof SeqDesignerOption.Integer){
+						iOption = (SeqDesignerOption.Integer) option;
+						jta.setText(iOption.getState()+"");
+						dOption = null;
+						sOption = null;
+					} else /*if (option instanceof SeqDesignerOption.String)*/{
+						sOption = (SeqDesignerOption.Str) option;
+						jta.setText(sOption.getState()+"");
+						dOption = null;
+						iOption = null;
+					}
 					jta.setMaximumSize(new Dimension(150,23));
 					jta.setMinimumSize(new Dimension(150,23));
 					final String defaultDedicateText = "Go";
 					final JButton dedicate = new JButton(defaultDedicateText);
-					if (dOption!=null){
-						jta.setText(dOption.getState()+"");
-					} else {
-						jta.setText(iOption.getState()+"");
-					}
+					
 					dedicate.setPreferredSize(new Dimension(70,23));
 					dedicate.addActionListener(new ActionListener(){
 						public void actionPerformed(ActionEvent f) {
 							try {
 								if (dOption!=null){
 									dOption.setState(new Double(jta.getText()));
-								} else {
+								} else if (iOption!=null){
 									iOption.setState(new Integer(jta.getText()));
+								} else if (sOption!=null){
+									sOption.setState(jta.getText());
 								}
 							} catch (Throwable e){
 								dedicate.setText("ERR.");
@@ -121,8 +129,10 @@ public class RunDesignerPanel {
 							if (cDesign.isRunning()){
 								if (dOption!=null){
 									jta.setText(dOption.getState()+"");
-								} else {
+								} else if (iOption!=null){
 									jta.setText(iOption.getState()+"");
+								} else if (sOption!=null){
+									jta.setText(sOption.getState()+"");
 								}
 							}
 							dedicate.setEnabled(!cDesign.isRunning());
