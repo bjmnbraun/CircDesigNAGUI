@@ -448,8 +448,11 @@ public class DNAPreviewStrand extends PApplet{
 				boolean oldWasHairpin = lastWasHairpin;
 				lastWasHairpin = ds instanceof HairpinStem; //Replace flag.
 				
-				float wiggleTheta = !dynamicWiggle?PI/4:sin(frameCount/120f*(1+ds.random0*.3f)+ds.random0*TWO_PI)*.3f; 
+				float wiggleTheta = PI/4; 
 				wiggleTheta = lastWasSS?0:wiggleTheta;
+				if (dynamicWiggle){
+					wiggleTheta += sin(frameCount/120f*(1+ds.random0*.3f)+ds.random0*TWO_PI)*.3f;
+				}
 				float HairpinOpenAngle = wiggleTheta;
 				float openingSize = 2f;
 				//Additional space to put on the ring, due to the opening of the loop.
@@ -702,7 +705,7 @@ public class DNAPreviewStrand extends PApplet{
 					ellipse(eW-eW*.9f,-eW*.9f,eW*2*.9f,eW*2*.9f);
 				}
 			}
-			private boolean dynamicWiggle = false; private long dynamicWiggle_clock = System.nanoTime();
+			private boolean dynamicWiggle = true; private long dynamicWiggle_clock = System.nanoTime();
 			private boolean drawLineStructure = true; 
 			private boolean showDomainNames = true;
 			private boolean drawPolymerGraph = false;
