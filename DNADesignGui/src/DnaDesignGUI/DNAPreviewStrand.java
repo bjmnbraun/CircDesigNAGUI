@@ -234,6 +234,7 @@ public class DNAPreviewStrand extends PApplet{
 					if (keyEvent.getKeyChar() == 'd'){
 						if (System.nanoTime()-keyPressedClock>INPUT_CLOCK_INT){
 							keyPressedClock = System.nanoTime();
+							
 							drawLineStructure = !drawLineStructure;
 						}
 					}	
@@ -244,11 +245,21 @@ public class DNAPreviewStrand extends PApplet{
 							showDomainNames = !showDomainNames;
 						}
 					}
+					if (keyEvent.getKeyChar() == 'w'){
+						if (System.nanoTime()-keyPressedClock>INPUT_CLOCK_INT){
+							keyPressedClock = System.nanoTime();
+							
+							dynamicWiggle = !dynamicWiggle;
+							//Invalidate:
+							hasInitialParticleConfiguration = false;
+						}
+					}
 					if (keyEvent.getKeyChar() == 'p'){
 						if (System.nanoTime()-keyPressedClock>INPUT_CLOCK_INT){
 							keyPressedClock = System.nanoTime();
 							
 							drawPolymerGraph = !drawPolymerGraph;
+							//Invalidate:
 							hasInitialParticleConfiguration = false;
 						}
 					}

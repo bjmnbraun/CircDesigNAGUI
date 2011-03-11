@@ -423,11 +423,12 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 					"<br>" +
 					"Hotkeys:<br>" +
 					"<ul>" +
-					"<li>Shift\"+\" - Zoom In" +
-					"<li>\"-\" - Zoom Out" +
-					"<li>\"d\" - Turn on / off line or bubble display" +
-					"<li>\"a\" - Turn on / off domain name display" +
-					"<li>\"p\" - Turn on / off Circular Polymer Graph display mode" +
+					"<li>Shift\"+\" - Zoom In." +
+					"<li>\"-\" - Zoom Out." +
+					"<li>\"w\" - Turn on / off \"realistic\" molecule dynamics. Turn off for figure creation!" +
+					"<li>\"d\" - Turn on / off line or bubble display." +
+					"<li>\"a\" - Turn on / off domain name display." +
+					"<li>\"p\" - Turn on / off circular polymer graph display mode." +
 					"</ul>",
 				this,this), BorderLayout.CENTER);
 			
@@ -566,14 +567,16 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 		CircDesignConfig.customCodonTable = text;
 	}
 
+	//Cursor update!
 	public void caretUpdate(CaretEvent e) {
 		int wise = e.getDot();
 		Scanner lines = new Scanner(((JTextComponent)e.getSource()).getText());
 		int countLine = 0, countLineTotal = 0;
 		String q = "";
+		String ls = System.getProperty("line.separator");
 		while(lines.hasNextLine()){
 			q = lines.nextLine();
-			countLineTotal += q.length()+1;
+			countLineTotal += q.length()+ls.length();
 			if (wise < countLineTotal){
 				break;
 			}

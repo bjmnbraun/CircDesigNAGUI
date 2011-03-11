@@ -95,7 +95,7 @@ public class RunDesignerPanel {
 					}
 					jta.setMaximumSize(new Dimension(150,23));
 					jta.setMinimumSize(new Dimension(150,23));
-					final String defaultDedicateText = "Go";
+					final String defaultDedicateText = "Set";
 					final JButton dedicate = new JButton(defaultDedicateText);
 					
 					dedicate.setPreferredSize(new Dimension(70,23));
