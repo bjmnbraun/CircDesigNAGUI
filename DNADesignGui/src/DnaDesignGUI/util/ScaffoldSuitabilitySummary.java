@@ -18,9 +18,6 @@ public class ScaffoldSuitabilitySummary {
 		for(File q : dir.listFiles()){
 
 			boolean printSeqs= false;
-			if (q.getName().startsWith("CDNAone")){
-				printSeqs = true;
-			}
 			
 			
 			if (q.getName().endsWith(".vienna.struct") || q.getName().endsWith(".vienna.suit")){

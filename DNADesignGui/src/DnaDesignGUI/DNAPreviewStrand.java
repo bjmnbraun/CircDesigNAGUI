@@ -345,7 +345,7 @@ public class DNAPreviewStrand extends PApplet{
 					} else {
 						boolean wasSS = true;
 						for(DomainStructure ds : dsg.structures){
-							drawStructure(ds, actuallyDraw, dsg.outerCurveCircum, 0, wasSS && !(ds instanceof HairpinStem));
+							drawStructure(ds, actuallyDraw, dsg.outerCurveCircum, 0, wasSS && !(ds instanceof HairpinStem), true);
 							wasSS = ds instanceof SingleStranded;
 						}
 					}
@@ -451,7 +451,7 @@ public class DNAPreviewStrand extends PApplet{
 			}
 			private boolean lastWasHairpin = false;
 			final float eW = .03f;
-			private void drawStructure(DomainStructure ds, boolean trueDraw, int hairpinSize, int shaftLength, boolean lastWasSS){
+			private void drawStructure(DomainStructure ds, boolean trueDraw, int hairpinSize, int shaftLength, boolean lastWasSS, boolean allowWiggle){
 				if (shaftLength>0 && !(ds instanceof HairpinStem)){
 					throw new RuntimeException("Assertion error: inShaft only valid for continuing hairpinstems");
 				}
@@ -461,7 +461,7 @@ public class DNAPreviewStrand extends PApplet{
 				
 				float wiggleTheta = PI/4; 
 				wiggleTheta = lastWasSS?0:wiggleTheta;
-				if (dynamicWiggle){
+				if (dynamicWiggle && allowWiggle){
 					wiggleTheta += sin(frameCount/120f*(1+ds.random0*.3f)+ds.random0*TWO_PI)*.3f;
 				}
 				float HairpinOpenAngle = wiggleTheta;
@@ -568,7 +568,7 @@ public class DNAPreviewStrand extends PApplet{
 							//Recurse through closed loop
 							for(int k = 0; k < hs.subStructure.size(); k++){
 								DomainStructure domainStructure = hs.subStructure.get(k);
-								drawStructure(domainStructure,trueDraw,hs.innerCurveCircumference, 0, false);	
+								drawStructure(domainStructure,trueDraw,hs.innerCurveCircumference, 0, false, true);	
 							}
 						} else {
 							//Broken loop. Render the right, then the left (stack)
@@ -588,7 +588,8 @@ public class DNAPreviewStrand extends PApplet{
 											rightLoopSize += DomainStructure.getOuterLevelSpace(domainStructure, dsd.domainLengths, dsg.domains);
 										} else {
 											//Use "lastwasSS" to get it oriented the right way on the way back
-											drawStructure(domainStructure,trueDraw,-1, 0, true);
+											//Can't allow wiggling, unfortunately.
+											drawStructure(domainStructure,trueDraw,-1, 0, true, false);
 										}
 									}
 									if (getLengthPass){
@@ -612,7 +613,7 @@ public class DNAPreviewStrand extends PApplet{
 								if(!(domainStructure instanceof HairpinStem)){
 									lastWasSS2 = true;
 								}
-								drawStructure(domainStructure,trueDraw,-1, 0, lastWasSS2);	
+								drawStructure(domainStructure,trueDraw,-1, 0, lastWasSS2, true);	
 								if(domainStructure instanceof HairpinStem){
 									lastWasSS2 = false;
 								}
@@ -622,7 +623,7 @@ public class DNAPreviewStrand extends PApplet{
 						//Recurse up shaft
 						for(int k = 0; k < hs.subStructure.size(); k++){
 							DomainStructure domainStructure = hs.subStructure.get(k);
-							drawStructure(domainStructure,trueDraw,hs.innerCurveCircumference, newShaftLength, false);	
+							drawStructure(domainStructure,trueDraw,hs.innerCurveCircumference, newShaftLength, false, true);	
 						}
 					}
 					if (shaftLength!=0){

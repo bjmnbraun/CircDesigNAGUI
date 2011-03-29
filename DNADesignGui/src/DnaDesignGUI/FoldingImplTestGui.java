@@ -79,7 +79,7 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 				nullMarkings[k] = new int[domain_sequences[k].length];
 			}
 			triangleApplet.setPenalty(cur.sp, domain_sequences, nullMarkings, fil);
-			double score = cur.sp.evalScoreSub(domain_sequences, nullMarkings);
+			double score = triangleApplet.getEvalScore();
 			penaltyScore.setText(String.format("%.3f",score));
 		}
 	}

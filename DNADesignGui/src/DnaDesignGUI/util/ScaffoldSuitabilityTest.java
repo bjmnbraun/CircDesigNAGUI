@@ -71,6 +71,7 @@ public class ScaffoldSuitabilityTest {
 		}
 	}
 
+	//Try with nupack instead?
 	private static final String absPathToHybridMinMod = "\"C:\\Users\\Benjamin\\CLASSWORK\\002. UT UNDERGRADUATE GENERAL\\EllingtonLab\\AutoAmplifierDesign\\unafold\\hybrid-min.exe\" --NA=DNA ";
 
 	private static void scaffoldSuitability(String seqT, int N, CircDesigNAConfig config, boolean doRevComp) throws IOException, InterruptedException {
@@ -124,6 +125,8 @@ public class ScaffoldSuitabilityTest {
 			}
 			out1.close();
 			out2.close();
+			
+			
 			Process p = Runtime.getRuntime().exec(absPathToHybridMinMod+"\""+tmp1.getAbsolutePath()+"\" \""+tmp2.getAbsolutePath()+"\"");
 			Scanner in = new Scanner(p.getInputStream());
 			while(in.hasNextLine()){

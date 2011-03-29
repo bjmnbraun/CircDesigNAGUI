@@ -156,6 +156,7 @@ if(max==null || property==null) {
   </finally>
 </trycatch>
         <jar jarfile="./web/DnaDesign.jar" basedir="./bin/" includes="${onlineIncludes}">
+			<fileset dir="${dataDir_local}/jar" />
 		</jar>
 		<jar jarfile="./web/${webjar}" includes="DnaDesignGUI/**/*.class" basedir="./bin/">
 			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/core.jar" />

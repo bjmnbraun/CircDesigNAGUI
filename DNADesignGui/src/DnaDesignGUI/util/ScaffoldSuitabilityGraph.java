@@ -15,7 +15,7 @@ public class ScaffoldSuitabilityGraph extends PApplet{
 		size(640,640,P2D);
 		Text Text;
 		int i = 0;
-		String[] names = new String[]{"M13","CDNAonedomain","Random"};
+		String[] names = new String[]{"M13based",/*"M13","CDNAonedomain","Random"*/};
 		Texts = new Text[names.length*3];
 		for(; i/3 < names.length;){
 			Text = new Text();
