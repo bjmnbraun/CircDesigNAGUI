@@ -23,7 +23,7 @@ public class ScaffoldSuitabilitySummary {
 			if (q.getName().endsWith(".vienna.struct") || q.getName().endsWith(".vienna.suit")){
 				boolean doRevComp = q.getName().endsWith(".suit");
 				
-				String seq = System.getProperty("viennaFilesDir")+"/"+q.getName().substring(0,q.getName().indexOf("."))+".vienna";
+				String seq = System.getProperty("viennaFilesDir")+"/"+q.getName().substring(0,q.getName().lastIndexOf('.'));
 				{
 					Scanner in = new Scanner(new File(seq));
 					in.nextLine();

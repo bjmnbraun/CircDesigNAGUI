@@ -2,7 +2,6 @@ package DnaDesignGUI.util;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -31,6 +30,9 @@ public class ScaffoldSuitabilityTest {
 				Scanner in = new Scanner(new FileInputStream(q));
 				String mfe = in.nextLine();
 				String seq = in.nextLine();
+				if (seq.length()>8000){
+					seq = seq.substring(0,8000);
+				}
 				String dotparens = in.nextLine();
 				in.close();
 

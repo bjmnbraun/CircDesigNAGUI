@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="DnaDesignGUI.makejar" basedir="./build/" default="default">
+<project name="DnaDesignGUI.makejar" basedir=".">
+	<!-- basedir="." default="default" -->
+	<!-- Path to the actual DNADesign package. -->
+	<!--<property name="DnaDesignPath" value="/home/benjamin/BuildAssignments/DnaDesign/DnaDesign/DNADesign" />-->
+	<property name="DnaDesignPath" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\DNADesign\DNADesign" />
+	
+	<!--<property name="DSSEngine_path" value="/home/benjamin/BuildAssignments/DnaDesign/BuildReqsForDna/TaiWebDeployUtils/DSSEngine" />-->
+	<property name="Engine_path" value="." />
+	<property name="DSS_anttasks_path" value="${Engine_path}/DSS-anttasks.jar" />
+	<property name="ant_contrib_jar" value="${Engine_path}/ant-contrib-1.0b3.jar" />
+	<property name="lib" value="${Engine_path}/lib" />
+	<property name="buildintdir" value="${basedir}/build" />
+	
 	<!-- make sure outjar / outjar2 are both only filenames, no paths. -->
 
 <!-- random number generator -->	
@@ -21,14 +33,6 @@ if(max==null || property==null) {
 	<property name="DeploymentName" value="${DeploymentJarMatches}${Disambiguator}" />
 	<property name="p5Main" value="DnaDesignGUI.DnaDesignGui" />
 	<property name="p5Main2" value="DnaDesignGUI.FoldingImplTestGui" />
-	<!-- Path to the actual DNADesign package. -->
-	<!--<property name="DnaDesignPath" value="/home/benjamin/BuildAssignments/DnaDesign/DnaDesign/DNADesign" />-->
-	<property name="DnaDesignPath" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\DNADesign\DNADesign" />
-	
-	<!--<property name="DSSEngine_path" value="/home/benjamin/BuildAssignments/DnaDesign/BuildReqsForDna/TaiWebDeployUtils/DSSEngine" />-->
-	<property name="DSSEngine_path" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\TaiWebDeployUtils\DSSEngine" />
-	<property name="DSS_anttasks_path" value="${DSSEngine_path}/DSS-anttasks.jar" />
-	<property name="ant_contrib_jar" value="${DSSEngine_path}/ant-contrib-1.0b3.jar" />
 	
 	<!-- outjar contains code, outjar2 contains resources (images, etc. -->
 	<!-- outjar is loaded immediately, outjar2 is lazily loaded -->
@@ -36,41 +40,23 @@ if(max==null || property==null) {
 	<property name="webjar" value="${DeploymentName}_web_1.jar" />
 	<property name="webjar2" value="${DeploymentName}_web_2.jar" />
 	
-	<property name="lib" value="${DSSEngine_path}/lib" />
-	<property name="dataDir_local" value="../res" />
-	<property name="dataDir" value="${DSSEngine_path}/res" />
+	<property name="dataDir_local" value="res" />
 	<property name="taiLaunchMain" value="Deployments.${DeploymentName}" />
-	<property name="toCompileJava_Core" value="
-		${DSSEngine_path}/src:
-		${DSSEngine_path}/src_lib/jmep:
-		${DSSEngine_path}/src_lib/jmpeg:
-		${DSSEngine_path}/src_lib/jorbis:
-		${DSSEngine_path}/src_lib/minim:
-		${DSSEngine_path}/src_lib/viperapi:
-		${DSSEngine_path}/src_lib/vorbisspi
-		" />
 	<property name="toCompileJava" value="
-		../src:
+		src:
 		${DnaDesignPath}/src
 		"/>
 	<property name="onlineIncludes_Core" value="
-		BulletGame*/**/*.class,
 		Deployments*/**/*.class,
 		DNA*/**/*.class,
 		processing*/**/*.class,
-		TaiGameCore/*.class,
-		TaiScript*/**/*.class,
-		com/iabcinc/**/*.class,
-		com/jcraft/**/*.class,
-		ddf/**/*.class,
-		javazoom/**/*.class,
 		edu/**/*.class," />
 	<property name="onlineIncludes" value="
 		org*/**/*.class,
 		DnaDesign/**/*.class,
 		" />
 	
-	<!--Def the tasks. -->
+	<!--Define some build tasks. -->
 	<taskdef name="increment" classname="uttaifun.funant.increment" classpath="${DSS_anttasks_path}" />
 	<taskdef name="trycatch" classname="net.sf.antcontrib.logic.TryCatchTask" classpath="${ant_contrib_jar}"/>
 	<taskdef name="srchreplace" classname="uttaifun.funant.srchReplace" classpath="${DSS_anttasks_path}" />
@@ -82,25 +68,25 @@ if(max==null || property==null) {
 	<target name="makeAdditional" description="Builds outjar2.">
 	</target>
 
-	<!-- NOTE! you must pass -Ddeploypath="MYURL" to run the game from any other directory!
+	<!-- NOTE! you must pass -Ddeploypath="MYURL" to run the app from any other directory!
 	This is because the JNLP tool uses ABSOLUTE paths (for security reasons) -->
-	<property name="deploypath" value="file:///${basedir}/web" />
+	<property name="deploypath" value="file:///${basedir}/build/web" />
 	
 	<!-- Note: if you get annoyed at the time makeAdditional takes to run, it's not 
-	necessary to run each time. -->
+	necessary to run it each time. -->
 	<target name="default"  depends="makeAdditional, makeWeb, uploadHtml, compile.doc" />
 	<target name="default_winrun" depends="makeAdditional,makeWeb, uploadHtml, compile.doc">
 		<exec executable="cmd.exe">
-			<arg line="/C start ${basedir}/web/index.html" />
+			<arg line="/C start ${basedir}/build/web/index.html" />
 		</exec>
 	</target>
 
 
 	
 	<target name="compile.java" description="Compiles the java files" >
-		<mkdir dir="./bin/" />
+		<mkdir dir="./build/bin/" />
             <!-- the PREPROC encoding is offered by the java simple processor -->
-        <javac destdir="./bin/" includes="**/**"
+        <javac destdir="./build/bin/" includes="**/**"
                includeAntRuntime="false" optimize="true"
 			   debug="true" debuglevel="lines,vars,source"
 			   target="1.5" source="1.5">
@@ -128,7 +114,7 @@ if(max==null || property==null) {
 
 	<target name="makeWeb" description="Sets up the webpage form of this app." depends="compile.java">
 		<echo message="Warning: makeweb does not run makeAdditional!" />
-		<mkdir dir="./web/" />
+		<mkdir dir="./build/web/" />
 
 		<!--
 		<copy file="${lib}/Java/Processing/minim/library/jl1.0.jar" tofile="./web/jl1.0.jar" />
@@ -144,7 +130,7 @@ if(max==null || property==null) {
 	<trycatch property="foo" reference="bar">
   <try>
 	    <delete>
-		<fileset dir="./web/" includes="${DeploymentJarMatches}*" />
+		<fileset dir="./build/web/" includes="${DeploymentJarMatches}*" />
 		</delete>
   </try>
 
@@ -155,10 +141,10 @@ if(max==null || property==null) {
   <finally>
   </finally>
 </trycatch>
-        <jar jarfile="./web/DnaDesign.jar" basedir="./bin/" includes="${onlineIncludes}">
+        <jar jarfile="build/web/DnaDesign.jar" basedir="build/bin/" includes="${onlineIncludes}">
 			<fileset dir="${dataDir_local}/jar" />
 		</jar>
-		<jar jarfile="./web/${webjar}" includes="DnaDesignGUI/**/*.class" basedir="./bin/">
+		<jar jarfile="build/web/${webjar}" includes="DnaDesignGUI/**/*.class" basedir="build/bin/">
 			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/core.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/pdf/library/itext.jar" />
 			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/pdf/library/pdf.jar" />
@@ -187,23 +173,23 @@ if(max==null || property==null) {
 		<!-- sign the jar! -->
 		<echo message="NOTE: you have to create a key/value pair using KeyTool and use it to sign the jar! " />
 		
-		<signit dir="/web/" file="${webjar}" keyname="key2011" pass="codeofdoom" />
-		<signit dir="/web/" file="DnaDesign.jar" keyname="key2011" pass="codeofdoom" />
+		<signit dir="build/web/" file="${webjar}" keyname="key2011" pass="codeofdoom" />
+		<signit dir="build/web/" file="DnaDesign.jar" keyname="key2011" pass="codeofdoom" />
 		
-		<copy todir=".">
+		<copy todir="${buildintdir}">
 			<fileset dir="${dataDir_local}/web" includes="*.html,*.jnlp" />
 		</copy>
 		<!-- replace the {CLASSNAME} with our applet -->
-		<srchreplace srcfile="${basedir}/web_template.html" destfile="${basedir}/web_template3.html" srch="{APPLETWIDTH}" rep="640" deletesrch="true" />
-		<srchreplace srcfile="${basedir}/web_template3.html" destfile="${basedir}/web_template4.html" srch="{APPLETHEIGHT}" rep="480" deletesrch="true" />
-		<srchreplace srcfile="${basedir}/web_template4.html" destfile="${basedir}/web_template5.html" srch="{DESTINATION_URL_DIR}" rep="${deploypath}" deletesrch="true" />
-		<srchreplace srcfile="${basedir}/web_template5.html" destfile="${basedir}/web_template6.html" srch="{CLASSLIBJAR}" rep="${webjar},DnaDesign.jar" deletesrch="true" />
-		<srchreplace srcfile="${basedir}/web_template6.html" destfile="${basedir}/index2.html" srch="{CLASSNAME}" rep="${p5Main}" deletesrch="false"/>
-		<srchreplace srcfile="${basedir}/web_template6.html" destfile="${basedir}/index3.html" srch="{CLASSNAME}" rep="${p5Main2}" deletesrch="true" />
-		<move todir="${basedir}/web">
+		<srchreplace srcfile="${buildintdir}/web_template.html" destfile="${buildintdir}/web_template3.html" srch="{APPLETWIDTH}" rep="640" deletesrch="true" />
+		<srchreplace srcfile="${buildintdir}/web_template3.html" destfile="${buildintdir}/web_template4.html" srch="{APPLETHEIGHT}" rep="480" deletesrch="true" />
+		<srchreplace srcfile="${buildintdir}/web_template4.html" destfile="${buildintdir}/web_template5.html" srch="{DESTINATION_URL_DIR}" rep="${deploypath}" deletesrch="true" />
+		<srchreplace srcfile="${buildintdir}/web_template5.html" destfile="${buildintdir}/web_template6.html" srch="{CLASSLIBJAR}" rep="${webjar},DnaDesign.jar" deletesrch="true" />
+		<srchreplace srcfile="${buildintdir}/web_template6.html" destfile="${buildintdir}/index2.html" srch="{CLASSNAME}" rep="${p5Main}" deletesrch="false"/>
+		<srchreplace srcfile="${buildintdir}/web_template6.html" destfile="${buildintdir}/index3.html" srch="{CLASSNAME}" rep="${p5Main2}" deletesrch="true" />
+		<move todir="${buildintdir}/web">
 			<fileset dir="." includes="*.html,*.jnlp" />
 		</move>
-		<copy todir="${basedir}/web">
+		<copy todir="${buildintdir}/web">
 			<fileset dir="${dataDir_local}/web" includes="*.png,*.svg" />
 		</copy>
 	</target>

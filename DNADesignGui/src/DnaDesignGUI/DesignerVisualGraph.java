@@ -229,17 +229,23 @@ public class DesignerVisualGraph extends PApplet{
 			} else{
 				strokeWeight(2*strokeScale);
 				if (value > ENDTHRESHOLD){
-					value /= maxValue;
-					stroke(lerpColor(leastColor,mostColor,value));
+					//value /= maxValue;
+					value /= values[tk].length;
+					//value /= 5;
+					stroke(getColorscaleColor(value));
 				} else {
-					value /= maxValue;
 					stroke(40,255,40);
 				}
 				return true;
 			}
 		}
-		private int mostColor = color(255,0,0);
-		private int leastColor = color(0,0,0);
+		private int getColorscaleColor(float value) {
+			value *= 3;
+			int value2 = (int)value;
+			value2 = constrain(value2,0,gradient.length-2);
+			return lerpColor(gradient[value2],gradient[value2+1],value%1);
+		}
+		private int[] gradient = new int[]{color(255,255,178),color(254,204,92),color(253,141,90),color(227,26,28)};
 		private void moveTo(float[] position2, int i) {
 			translate(position2[i],position2[i+1]);
 		}
