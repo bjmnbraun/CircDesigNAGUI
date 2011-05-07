@@ -13,6 +13,9 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 
+/**
+ * Handles the customizable color-scheme. This is controlled by the running webpage.
+ */
 public abstract class DnaDesignGUI_ThemedApplet extends Applet implements ModalizableComponent{
 	public Color THEMECOL0,THEMECOL1,THEMECOL2,THEMECOL3,THEMECOL4;
 	public void parseThemeColors(){
@@ -66,7 +69,7 @@ public abstract class DnaDesignGUI_ThemedApplet extends Applet implements Modali
 			return Color.black;
 		}
 		if (string==null){
-			return Color.gray;
+			return Color.black;
 		}
 		return Color.decode(string);
 	}

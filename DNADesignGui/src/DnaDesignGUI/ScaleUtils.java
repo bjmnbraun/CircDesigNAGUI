@@ -5,7 +5,7 @@ import java.awt.Dimension;
 import java.util.ArrayList;
 
 /**
- * Utils for creating scalable layouts.
+ * Utilities for creating scalable layouts.
  */
 public class ScaleUtils {
 	private ArrayList<Component> preferredSizesKey = new ArrayList();;

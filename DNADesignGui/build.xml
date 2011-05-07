@@ -187,7 +187,7 @@ if(max==null || property==null) {
 		<srchreplace srcfile="${buildintdir}/web_template6.html" destfile="${buildintdir}/index2.html" srch="{CLASSNAME}" rep="${p5Main}" deletesrch="false"/>
 		<srchreplace srcfile="${buildintdir}/web_template6.html" destfile="${buildintdir}/index3.html" srch="{CLASSNAME}" rep="${p5Main2}" deletesrch="true" />
 		<move todir="${buildintdir}/web">
-			<fileset dir="." includes="*.html,*.jnlp" />
+			<fileset dir="${buildintdir}" includes="*.html,*.jnlp" />
 		</move>
 		<copy todir="${buildintdir}/web">
 			<fileset dir="${dataDir_local}/web" includes="*.png,*.svg" />

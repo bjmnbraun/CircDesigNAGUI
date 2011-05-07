@@ -15,6 +15,9 @@ import DnaDesign.impl.DomainDesignerImpl.MFEHybridScore;
 import DnaDesign.impl.DomainDesignerImpl.SelfFold;
 import DnaDesign.impl.DomainDesignerImpl.SelfSimilarityScore;
 
+/**
+ * Helper applet for FoldingImplTestGui, displays a detailed graphic of a single objective subscore.
+ */
 public class StructurePenaltyTriangle extends PApplet{
 	private DnaDesignGUI_ThemedApplet mc;
 	private CircDesigNAConfig config;

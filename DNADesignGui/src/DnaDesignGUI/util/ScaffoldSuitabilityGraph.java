@@ -5,9 +5,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
-import javax.swing.JOptionPane;
-import javax.swing.JTextArea;
-
 import processing.core.PApplet;
 
 public class ScaffoldSuitabilityGraph extends PApplet{

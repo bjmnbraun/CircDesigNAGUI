@@ -18,7 +18,7 @@ import processing.core.PFont;
 import processing.core.PMatrix;
 import DnaDesign.DomainPolymerGraph;
 import DnaDesign.DomainStructureBNFTree;
-import DnaDesign.DomainStructureData;
+import DnaDesign.DomainDefinitions;
 import DnaDesign.Config.CircDesigNAConfig;
 import DnaDesign.DomainStructureBNFTree.DomainStructure;
 import DnaDesign.DomainStructureBNFTree.HairpinStem;
@@ -28,7 +28,9 @@ import DnaDesign.Exception.InvalidDNAMoleculeException;
 import DnaDesign.Exception.InvalidDomainDefsException;
 
 /**
- * This is a Lite PApplet, which has no config file and just behaves as one would expect
+ * An embedded PApplet for displaying molecule previews. A number of keystrokes
+ * make this applet interactive. Mouse dragging also moves the screen. See the in-applet help file for
+ * the molecules window for more information.
  * @author Benjamin
  */
 public class DNAPreviewStrand extends PApplet{
@@ -104,7 +106,7 @@ public class DNAPreviewStrand extends PApplet{
 		needsCurrentMoleculeUpdate = (
 				!currentMoleculeString.equals(moleculeDescription) ||
 				!domainDefsBlock.equals(domainDefs));
-		String[] split = moleculeDescription.split("\\s+");
+		String[] split = moleculeDescription.split("\\s+",2);
 		if (split.length<2){
 			throw new InvalidDNAMoleculeException("Correct molecule format: <name> <molecule>",0);
 		}
@@ -135,8 +137,8 @@ public class DNAPreviewStrand extends PApplet{
 		                      P = new float []{100,100,140},
 		                      Z = new float []{24,100,120},
 		                      ERROR = new float []{255,0,0},
-		                      //D = new float []{100,0,140},
-		                      //H = new float []{24,27,120},
+		                      I = new float []{200,0,140},
+		                      L = new float []{200,27,120},
 		                      R = new float []{10,150,50},
 		                      Y = R,
 		                      M = Y,
@@ -180,7 +182,7 @@ public class DNAPreviewStrand extends PApplet{
 							e1.printStackTrace();
 						}
 						try {
-							DomainStructureData.readDomainDefs(domainDefsBlock, dsd);
+							DomainDefinitions.readDomainDefs(domainDefsBlock, dsd);
 						} catch (Throwable e){
 							throw new InvalidDomainDefsException(e.getMessage());
 						}
@@ -209,7 +211,7 @@ public class DNAPreviewStrand extends PApplet{
 					throw new UpdateSuccessfulException();
 				}
 			}
-			private DomainStructureData dsd = new DomainStructureData(config);
+			private DomainDefinitions dsd = new DomainDefinitions(config);
 			private DomainStructureBNFTree dsg = new DomainStructureBNFTree(dsd);
 			private DomainPolymerGraph dpg = new DomainPolymerGraph(dsd);
 			private float[] renderPolymerGraph_LengthCache = null; //For storing partial indexes of domains
@@ -350,7 +352,7 @@ public class DNAPreviewStrand extends PApplet{
 						}
 					}
 				} catch (Throwable e){
-					e.printStackTrace();
+					//e.printStackTrace();
 				} finally {
 					popMatrix_drawMolecule_full();
 				}
@@ -600,10 +602,10 @@ public class DNAPreviewStrand extends PApplet{
 								}
 							}
 							popMatrix_drawMolecule();
-							//Recurse through left
 							if (hs.leftRightBreak==0){
-								//Don't rotate if it's only a 3' end.
+							
 							} else {
+								//Recurse through left
 								rotate(HairpinOpenAngle);
 							}
 							//The left hand side can curve.

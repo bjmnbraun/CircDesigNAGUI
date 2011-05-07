@@ -25,6 +25,9 @@ import DnaDesign.DDSeqDesigner;
 import DnaDesign.DesignerOptions;
 import DnaDesign.DDSeqDesigner.SeqDesignerOption;
 
+/**
+ * The panel displayed when the designer is actively working on a design problem.
+ */
 public class RunDesignerPanel {
 	private DnaDesignGUI_ThemedApplet mc;
 	public JButton skinButton(JButton jb){
@@ -305,6 +308,7 @@ public class RunDesignerPanel {
 					showGraph.setBounds(newBounds);
 				}
 				*/
+				//Prevent a rare, but severe, AWT event feedback loop.
 				if (stackOverFlowHack[0]){
 					return;
 				}

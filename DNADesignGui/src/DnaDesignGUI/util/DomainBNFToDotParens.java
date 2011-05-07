@@ -1,8 +1,8 @@
-package DnaDesignGUI;
+package DnaDesignGUI.util;
 
 import java.util.Scanner;
 
-import DnaDesign.DomainStructureData;
+import DnaDesign.DomainDefinitions;
 import DnaDesign.Config.CircDesigNAConfig;
 
 public class DomainBNFToDotParens {
@@ -22,13 +22,14 @@ public class DomainBNFToDotParens {
 			}
 		}
 		CircDesigNAConfig config = new CircDesigNAConfig();
-		DomainStructureData dsd = new DomainStructureData(config);
-		DomainStructureData.readDomainDefs(DomainDefs.toString(), dsd);
+		DomainDefinitions dsd = new DomainDefinitions(config);
+		DomainDefinitions.readDomainDefs(DomainDefs.toString(), dsd);
 		for(String q : Molecule.toString().split("(\\||}|\\[)+")){
 			if (q.length()>0){
 				StringBuffer namePart = new StringBuffer();
 				boolean upParen = false;
 				boolean downParen = false;
+
 				for(char d : q.toCharArray()){
 					if (d == '('){
 						upParen = true;
@@ -43,7 +44,7 @@ public class DomainBNFToDotParens {
 							}
 				}
 				//System.out.println(namePart);
-				final Integer i = dsd.nameMap.get(namePart.toString());
+				final Integer i = dsd.lookupDomainName(namePart.toString());
 				//System.out.println(i);
 				int num = dsd.domainLengths[i];
 				for(int k = 0; k < num; k++){

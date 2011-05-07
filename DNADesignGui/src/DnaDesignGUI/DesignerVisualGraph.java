@@ -12,6 +12,13 @@ import processing.core.PFont;
 import DnaDesign.DDSeqDesigner;
 import DnaDesign.DesignIntermediateReporter;
 
+
+/**
+ * Code for the graphic inside the designer where all interactions between molecules being designed
+ * are displayed. It places each molecule on equally spaced points on a circle, and then draws
+ * every possible edge.
+ * @author Benjamin
+ */
 public class DesignerVisualGraph extends PApplet{
 	private DDSeqDesigner design;
 	public void setVisible(boolean b){

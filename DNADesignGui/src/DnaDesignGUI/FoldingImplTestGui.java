@@ -31,14 +31,17 @@ import DnaDesign.DesignerOptions;
 import DnaDesign.DomainDesigner;
 import DnaDesign.DomainPolymerGraph;
 import DnaDesign.DomainSequence;
-import DnaDesign.DomainStructureData;
+import DnaDesign.DomainDefinitions;
 import DnaDesign.AbstractPolymer.DnaDefinition;
 import DnaDesign.Config.CircDesigNAConfig;
 import DnaDesign.DomainDesigner.ScorePenalty;
 import DnaDesign.impl.DomainDesignerImpl;
 import DnaDesign.impl.FoldingImpl;
 
-
+/**
+ * Displays a window which allows for debugging of the individual components of the objective function, 
+ * Score.
+ */
 public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 	ScaleUtils su;
 	public FoldingImplTestGui(){
@@ -87,7 +90,7 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 	private void runStartRoutine() {
 		//Logic
 		config = new CircDesigNAConfig();
-		
+		fil = new FoldingImpl(config);
 		
 		//Gui
 		
@@ -214,17 +217,16 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 	private Collection<PenaltyObject> getPenalties() {
 		ArrayList<PenaltyObject> penalties = new ArrayList();
 		try {
-			fil = new FoldingImpl(config);
 			DomainDesignerImpl ddi = new DomainDesignerImpl(fil,config);
-			DomainStructureData dsd = new DomainStructureData(config);
-			DomainStructureData.readDomainDefs(domainDefs.getText(), dsd);
+			DomainDefinitions dsd = new DomainDefinitions(config);
+			DomainDefinitions.readDomainDefs(domainDefs.getText(), dsd);
 			DomainPolymerGraph dsg = new DomainPolymerGraph(dsd);
 			AbstractDomainDesignTarget target = new AbstractDomainDesignTarget(dsd,config);
 			for(int whichMolecule = 0; whichMolecule <= 1; whichMolecule++){
 				if (whichMolecule==0){
-					target.addTargetStructure("Molecule A", last(moleculeInput1.getText().trim().split("\\s+")));
+					target.addTargetStructure("Molecule A", last(moleculeInput1.getText().trim().split("\\s+",2)));
 				} else {
-					target.addTargetStructure("Molecule B", last(moleculeInput2.getText().trim().split("\\s+")));
+					target.addTargetStructure("Molecule B", last(moleculeInput2.getText().trim().split("\\s+",2)));
 				}
 			}
 			
@@ -262,7 +264,7 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 	private class PenaltyObject {
 		public String myString;
 		private ScorePenalty sp;
-		public PenaltyObject(ScorePenalty sp, DomainStructureData dsd){
+		public PenaltyObject(ScorePenalty sp, DomainDefinitions dsd){
 			myString = sp.toString(dsd);
 			this.sp = sp;
 		}

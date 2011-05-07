@@ -12,6 +12,10 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
 
+/**
+ * Modal windowing system, which means that a single modal window can be open
+ * at any time, and is rendered on top of all other components. The overlaid window captures all input.
+ */
 public class ModalUtils {
 	public static JPanel openModalDialog(DnaDesignGUI_ThemedApplet mc, final Font xfont) {
 		return openModalDialog(mc, xfont, new Runnable(){

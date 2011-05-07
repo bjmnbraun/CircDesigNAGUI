@@ -1,6 +1,5 @@
 package DnaDesignGUI;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -20,7 +19,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-
+/**
+ * Displays a help button, which, when clicked, opens a help window to display information about
+ * the corresponding component.
+ */
 public class HelpButton extends JButton implements MouseListener{
 	private String msg,header;
 	private DnaDesignGUI_ThemedApplet mc;
@@ -29,6 +31,7 @@ public class HelpButton extends JButton implements MouseListener{
 		if (mc==null || mc.getModalPanel()==null){ super.repaint(); return;}
 		int hasSub = mc.getModalPanel().getComponentCount();
 		if (hasSub > 0){
+	
 			return;
 		}
 		super.repaint();

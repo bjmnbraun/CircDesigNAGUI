@@ -10,12 +10,14 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
+/**
+ * Utility GUI for modifying the codon table.
+ */
 public class ModifyCodonTablePanel {
 	public ModifyCodonTablePanel(final DnaDesignGui mc, Font monoSpaceFont) {
 		final JPanel openModalDialog = ModalUtils.openModalDialog(mc,monoSpaceFont, new Runnable(){
 			public void run() {
 				//Closing action
-				
 			}
 		});
 		
