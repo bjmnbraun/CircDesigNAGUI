@@ -5,9 +5,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
-import DnaDesign.DomainSequence;
+import circdesigna.energy.CircDesigNAMCSFolder;
+
+import edu.utexas.cssb.circdesigna.DomainSequence;
+
 import DnaDesign.Config.CircDesigNAConfig;
-import DnaDesign.impl.FoldingImpl;
 
 public class ScaffoldSuitabilitySummary {
 	public static void main(String[] args) throws FileNotFoundException{
@@ -51,7 +53,7 @@ public class ScaffoldSuitabilitySummary {
 				DomainSequence seq2 = new DomainSequence();
 				seq1.setDomains(0,null);
 				seq2.setDomains(1,null);
-				FoldingImpl fl = new FoldingImpl(config);
+				CircDesigNAMCSFolder fl = new CircDesigNAMCSFolder(config);
 				
 				while(in.hasNextLine()){
 					String[] line = in.nextLine().split("\\s+");
@@ -80,7 +82,7 @@ public class ScaffoldSuitabilitySummary {
 								domain[1][i] = config.monomer.decodeBaseChar(seq.charAt(x+i));
 							}
 							
-							double scoreSelf = fl.mfeHybridDeltaG(seq1, seq2, domain, nullMark);
+							double scoreSelf = fl.mfe(seq1, seq2, domain, nullMark);
 							
 							System.out.println(y+" "+x+" "+seq.substring(y,y+N)+" "+seq.substring(x,x+N*2)+" "+val+" "+scoreSelf);
 						}

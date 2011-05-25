@@ -7,10 +7,11 @@ import java.io.IOException;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 
+import edu.utexas.cssb.circdesigna.SequenceDesigner;
+import edu.utexas.cssb.circdesigna.DesignIntermediateReporter;
+
 import processing.core.PApplet;
 import processing.core.PFont;
-import DnaDesign.DDSeqDesigner;
-import DnaDesign.DesignIntermediateReporter;
 
 
 /**
@@ -20,7 +21,7 @@ import DnaDesign.DesignIntermediateReporter;
  * @author Benjamin
  */
 public class DesignerVisualGraph extends PApplet{
-	private DDSeqDesigner design;
+	private SequenceDesigner design;
 	public void setVisible(boolean b){
 		if (b && !start){
 			init();
@@ -258,7 +259,7 @@ public class DesignerVisualGraph extends PApplet{
 		}
 		private float[] position = new float[4];
 		private DesignIntermediateReporter dir;
-		public void setDesigner(DDSeqDesigner design) {
+		public void setDesigner(SequenceDesigner design) {
 			this.design = design;
 			dir = design.getDir();
 		}

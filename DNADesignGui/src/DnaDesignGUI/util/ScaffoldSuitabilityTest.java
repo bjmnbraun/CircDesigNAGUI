@@ -8,9 +8,11 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
-import DnaDesign.DomainSequence;
+import circdesigna.energy.CircDesigNAMCSFolder;
+
+import edu.utexas.cssb.circdesigna.DomainSequence;
+
 import DnaDesign.Config.CircDesigNAConfig;
-import DnaDesign.impl.FoldingImpl;
 
 /**
  * Tests partitions of a scaffold's reverse complement (length N each) against all length N regions of the
@@ -77,7 +79,7 @@ public class ScaffoldSuitabilityTest {
 	private static final String absPathToHybridMinMod = "\"C:\\Users\\Benjamin\\CLASSWORK\\002. UT UNDERGRADUATE GENERAL\\EllingtonLab\\AutoAmplifierDesign\\unafold\\hybrid-min.exe\" --NA=DNA ";
 
 	private static void scaffoldSuitability(String seqT, int N, CircDesigNAConfig config, boolean doRevComp) throws IOException, InterruptedException {
-		FoldingImpl fi = new FoldingImpl(config);
+		CircDesigNAMCSFolder fi = new CircDesigNAMCSFolder(config);
 		
 		int[][] domain = new int[N][];
 		domain[0] = new int[N];

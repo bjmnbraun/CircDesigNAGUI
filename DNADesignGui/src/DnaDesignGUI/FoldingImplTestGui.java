@@ -25,18 +25,20 @@ import javax.swing.event.CaretListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import DnaDesign.AbstractDomainDesignTarget;
-import DnaDesign.DesignIntermediateReporter;
-import DnaDesign.DesignerOptions;
-import DnaDesign.DomainDesigner;
-import DnaDesign.DomainPolymerGraph;
-import DnaDesign.DomainSequence;
-import DnaDesign.DomainDefinitions;
+import circdesigna.energy.CircDesigNAMCSFolder;
+
+import edu.utexas.cssb.circdesigna.AbstractDomainDesignTarget;
+import edu.utexas.cssb.circdesigna.DesignIntermediateReporter;
+import edu.utexas.cssb.circdesigna.CircDesigNAOptions;
+import edu.utexas.cssb.circdesigna.DomainDefinitions;
+import edu.utexas.cssb.circdesigna.DomainDesigner;
+import edu.utexas.cssb.circdesigna.DomainPolymerGraph;
+import edu.utexas.cssb.circdesigna.DomainSequence;
+import edu.utexas.cssb.circdesigna.DomainDesigner.ScorePenalty;
+
 import DnaDesign.AbstractPolymer.DnaDefinition;
 import DnaDesign.Config.CircDesigNAConfig;
-import DnaDesign.DomainDesigner.ScorePenalty;
 import DnaDesign.impl.DomainDesignerImpl;
-import DnaDesign.impl.FoldingImpl;
 
 /**
  * Displays a window which allows for debugging of the individual components of the objective function, 
@@ -62,7 +64,7 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 		}.start();
 	}
 	private CircDesigNAConfig config;
-	private FoldingImpl fil;
+	private CircDesigNAMCSFolder fil;
 	private StructurePenaltyTriangle triangleApplet;
 	private JPanel triangleAppletProxy;
 	private JList possibleViews;
@@ -90,7 +92,7 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 	private void runStartRoutine() {
 		//Logic
 		config = new CircDesigNAConfig();
-		fil = new FoldingImpl(config);
+		fil = new CircDesigNAMCSFolder(config);
 		
 		//Gui
 		
@@ -224,9 +226,9 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 			AbstractDomainDesignTarget target = new AbstractDomainDesignTarget(dsd,config);
 			for(int whichMolecule = 0; whichMolecule <= 1; whichMolecule++){
 				if (whichMolecule==0){
-					target.addTargetStructure("Molecule A", last(moleculeInput1.getText().trim().split("\\s+",2)));
+					target.addTargetStructure(moleculeInput1.getText());
 				} else {
-					target.addTargetStructure("Molecule B", last(moleculeInput2.getText().trim().split("\\s+",2)));
+					target.addTargetStructure(moleculeInput2.getText());
 				}
 			}
 			
@@ -246,7 +248,7 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 				}
 			}
 
-			List<ScorePenalty> listPenalties = ddi.listPenalties(target, dir, domain, DesignerOptions.getDefaultOptions(), dsd);
+			List<ScorePenalty> listPenalties = ddi.listPenalties(target, dir, domain, CircDesigNAOptions.getDefaultOptions(), dsd);
 			for(ScorePenalty sp : listPenalties){
 				penalties.add(new PenaltyObject(sp, dsd));	
 			}
@@ -257,9 +259,6 @@ public class FoldingImplTestGui extends DnaDesignGUI_ThemedApplet{
 			errText.setText(e.getMessage());
 		}
 		return penalties;
-	}
-	private <T> T last(T[] split) {
-		return split[split.length-1];
 	}
 	private class PenaltyObject {
 		public String myString;

@@ -23,19 +23,20 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.OverlayLayout;
+import javax.swing.SwingUtilities;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.plaf.basic.BasicBorders.MarginBorder;
 import javax.swing.text.JTextComponent;
 
-import DnaDesign.DDSeqDesigner;
-import DnaDesign.DomainDesigner;
-import DnaDesign.DomainDesigner_SharedUtils;
 import DnaDesign.Config.CircDesigNAConfig;
 import DnaDesign.Exception.InvalidDNAMoleculeException;
 import DnaDesign.Exception.InvalidDomainDefsException;
 import DnaDesign.impl.CodonCode;
 import DnaDesignGUI.DNAPreviewStrand.UpdateSuccessfulException;
+import edu.utexas.cssb.circdesigna.DomainDesigner;
+import edu.utexas.cssb.circdesigna.DomainDesigner_SharedUtils;
+import edu.utexas.cssb.circdesigna.SequenceDesigner;
 
 /**
  * Main GUI class. Lays out the applet, but does not handle the window that pops up when a help button is pressed
@@ -52,11 +53,11 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 		parseThemeColors();
 		setBackground(Color.white);
 		started = true;
-		new Thread(){
+		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){
 				runStartRoutine();
 			}
-		}.start();
+		});
 	}
 	private void runStartRoutine(){
 		//Logic: This config object is passed around to all implementers of CircDesigNASystemElement.
@@ -158,7 +159,7 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 				{
 					"Molecules",
 					"The input of this box provides the DNA molecules which are present in the solution being designed. Each line of this textual input describes a separate molecule, by listing its component nucleic acid strands." +
-					"<ul><li>Each strand is an ordered list of domain ID's, separated by the pipe character '|'</li>" +
+					"<ul><li>Each strand is an ordered list of domain ID's, separated by whitespace and enclosed by the 5' end '[' and the 3' end '}' characters. </li>" +
 					"<li>Each domain ID is optionally followed by the <i>reverse complement</i> operator, the asterisk '*'</li>" +
 					"<li>Each domain is marked by a hybridization flag, which is either a '.', a '(', or a ')', which is a dot-parenthesis " +
 					"representation of the secondary structure formed by the molecule. '.' (no hybridization) is default.</li>" +
@@ -166,10 +167,10 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 					"The sequences, subject to domain constraints, will then be chosen so as to minimize this function.<br>" +
 					"<br>" +
 					"Example:<br>" +
-					"C1		[3*|2*|1}<br>" +
-					"H1A-loop		[1*|4*}<br>" +
-					"H1A-tail		[1*(|5*|6*|4|1)}<br>" +
-					"C1_H1A	[3*|2*|(1}[1*)|4*}"
+					"C1		[3* 2* 1}<br>" +
+					"H1A-loop		[1* 4*}<br>" +
+					"H1A-tail		[1*( 5* 6* 4 1)}<br>" +
+					"C1_H1A	[3* 2* (1}[1*) 4*}"
 				}
 		};
 		
@@ -471,9 +472,13 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 		PreviewGraph.setVisible(false);
 		PreviewSeqs.setVisible(true);
 		
-		//Call necessitated by difficult to understand AWT interactions
-		validate();
-		invalidate();
+		//Calls necessitated by difficult to understand AWT interactions
+		SwingUtilities.invokeLater(new Runnable(){
+			public void run() {
+				validate();
+				fixAWT();
+			}			
+		});
 	}
 	public boolean modalPanelOpen(){
 		if (getModalPanel()==null){ return false;}
@@ -537,7 +542,7 @@ public class DnaDesignGui extends DnaDesignGUI_ThemedApplet implements Modalizab
 	private DNAPreviewStrand PreviewSeqs;
 	private DesignerVisualGraph PreviewGraph;
 	private JPanel PreviewSeqsProxy;
-	private DDSeqDesigner cDesign;
+	private SequenceDesigner cDesign;
 	private CircDesigNAConfig CircDesignConfig;
 	private void createNewDesigner(){
 		cDesign = DomainDesigner.getDefaultDesigner(Molecules.getText(),DomainDef.getText(),CircDesignConfig);

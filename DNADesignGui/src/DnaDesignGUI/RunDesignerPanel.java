@@ -21,9 +21,10 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.OverlayLayout;
 
-import DnaDesign.DDSeqDesigner;
-import DnaDesign.DesignerOptions;
-import DnaDesign.DDSeqDesigner.SeqDesignerOption;
+import edu.utexas.cssb.circdesigna.SequenceDesigner;
+import edu.utexas.cssb.circdesigna.CircDesigNAOptions;
+import edu.utexas.cssb.circdesigna.SequenceDesigner.SeqDesignerOption;
+
 
 /**
  * The panel displayed when the designer is actively working on a design problem.
@@ -34,9 +35,8 @@ public class RunDesignerPanel {
 		ButtonSkin.process(mc, jb);
 		return jb;
 	}
-	public RunDesignerPanel(DnaDesignGUI_ThemedApplet mc, final DDSeqDesigner cDesign, Font monoSpaceFont, final DesignerVisualGraph showGraph){
-		final JTextArea outputText = new JTextArea("No output. First begin the designer, and then press the button again to show an intermediate result.");
-		final JScrollPane showText = new JScrollPane(outputText);
+	public RunDesignerPanel(DnaDesignGUI_ThemedApplet mc, final SequenceDesigner cDesign, Font monoSpaceFont, final DesignerVisualGraph showGraph){
+		final DnaDesignOutputPanel showText = new DnaDesignOutputPanel(cDesign);
 		final JPanel showOptions = new JPanel();
 		this.mc = mc;
 		final JButton actionOnRunningDesigner = new JButton();
@@ -44,7 +44,7 @@ public class RunDesignerPanel {
 		{
 			showOptions.setBackground(mc.THEMECOL1);
 			Box showOptionsBox = Box.createVerticalBox();
-			DesignerOptions options = cDesign.getOptions();
+			CircDesigNAOptions options = cDesign.getOptions();
 			for(final SeqDesignerOption option : options.options){
 				JLabel label = new JLabel();
 				label.setText("<html>"+option.getDescription()+"</html>");
@@ -190,7 +190,7 @@ public class RunDesignerPanel {
 										} else {
 											setText("Designer Finished");
 										}
-										outputText.setText(cDesign.getResult());
+										showText.updateResult();
 										designerFinished1 = true;
 										repaint();
 									}
@@ -198,7 +198,7 @@ public class RunDesignerPanel {
 							}.start();
 						} else {
 							//Get intermediate result.
-							outputText.setText(cDesign.getResult());
+							showText.updateResult();
 						}
 						repaint();
 					}
@@ -263,7 +263,6 @@ public class RunDesignerPanel {
 				});
 			}
 		}));
-		outputText.setEditable(false);
 		
 		openModalDialog.setLayout(new BorderLayout());
 		JPanel buttons = new JPanel();

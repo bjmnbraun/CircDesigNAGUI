@@ -5,12 +5,14 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import circdesigna.energy.CircDesigNAMCSFolder;
+
+import edu.utexas.cssb.circdesigna.DomainSequence;
+import edu.utexas.cssb.circdesigna.DomainDesigner.ScorePenalty;
+
 import processing.core.PApplet;
 import processing.core.PFont;
-import DnaDesign.DomainSequence;
 import DnaDesign.Config.CircDesigNAConfig;
-import DnaDesign.DomainDesigner.ScorePenalty;
-import DnaDesign.impl.FoldingImpl;
 import DnaDesign.impl.DomainDesignerImpl.MFEHybridScore;
 import DnaDesign.impl.DomainDesignerImpl.SelfFold;
 import DnaDesign.impl.DomainDesignerImpl.SelfSimilarityScore;
@@ -27,7 +29,7 @@ public class StructurePenaltyTriangle extends PApplet{
 	private int[][] domain;
 	private int[][] domain_markings;
 	private ScorePenalty sp;
-	private FoldingImpl fil;
+	private CircDesigNAMCSFolder fil;
 	
 	private double foldScore;
 	public double getEvalScore(){
@@ -42,7 +44,7 @@ public class StructurePenaltyTriangle extends PApplet{
 		this.mc = mc;
 		this.config = config;
 	}
-	public void setPenalty(ScorePenalty sp, int[][] domain_sequences, int[][] nullMarkings, FoldingImpl fil){
+	public void setPenalty(ScorePenalty sp, int[][] domain_sequences, int[][] nullMarkings, CircDesigNAMCSFolder fil){
 		this.fil = fil;
 		if (sp instanceof MFEHybridScore || sp instanceof SelfFold || sp instanceof SelfSimilarityScore){
 			curSeqs = sp.getSeqs();

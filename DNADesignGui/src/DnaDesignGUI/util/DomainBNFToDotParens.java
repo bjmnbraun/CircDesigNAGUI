@@ -2,7 +2,8 @@ package DnaDesignGUI.util;
 
 import java.util.Scanner;
 
-import DnaDesign.DomainDefinitions;
+import edu.utexas.cssb.circdesigna.DomainDefinitions;
+
 import DnaDesign.Config.CircDesigNAConfig;
 
 public class DomainBNFToDotParens {
