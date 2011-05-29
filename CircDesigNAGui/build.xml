@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="DnaDesignGUI.makejar" basedir=".">
+	<!-- basedir="." default="default" -->
+	<!-- Path to the actual DNADesign package. -->
+	
+	<!-- BUILD INSTRUCTIONS: Set these environmental variables: DnaDesignPath -->
+	
+	<!-- Example: -->
+	<!--<property name="DnaDesignPath" value="/home/benjamin/BuildAssignments/DnaDesign/DnaDesign/DNADesign" />-->
+	<!--<property name="DnaDesignPath" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\DNADesign\DNADesign" />-->
+	<property name="DnaDesignPath" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\DNADesign\DNADesign" />
+	
+	<property name="Engine_path" value="." />
+	<property name="DSS_anttasks_path" value="${Engine_path}/DSS-anttasks.jar" />
+	<property name="ant_contrib_jar" value="${Engine_path}/ant-contrib-1.0b3.jar" />
+	<property name="lib" value="${Engine_path}/lib" />
+	<property name="buildintdir" value="${basedir}/build" />
+
+	
+<!-- random number generator -->	
+	<scriptdef language="javascript" manager="javax" name="random"><attribute name="max"/><attribute name="property"/>
+var max=attributes.get("max")
+var property=attributes.get("property")
+if(max==null || property==null) {
+  self.fail("'property' or 'max' is not set")
+} else { 
+  var result=java.util.Random().nextInt(max) 
+  self.log("Generated random number " + result)
+  project.setNewProperty(property, result);
+}
+	</scriptdef>
+
+	<random max="999999" property="Disambiguator"/>
+	<property name="DeploymentJarMatches" value="DnaDesignerGui" />
+	<property name="DeploymentName" value="${DeploymentJarMatches}${Disambiguator}" />
+	<property name="p5Main" value="circdesignagui.CircDesigNAGUI" />
+	<property name="p5Main2" value="circdesignagui.FoldingImplTestGui" />
+	
+	<!-- outjar contains code, outjar2 contains resources (images, etc. -->
+	<!-- outjar is loaded immediately, outjar2 is lazily loaded -->
+	<property name="outjar" value="${DeploymentName}_1.jar" />
+	<property name="webjar" value="${DeploymentName}_web_1.jar" />
+	<property name="webjar2" value="${DeploymentName}_web_2.jar" />
+	
+	<property name="dataDir_local" value="res" />
+	<property name="taiLaunchMain" value="Deployments.${DeploymentName}" />
+	<property name="toCompileJava" value="
+		src:
+		${DnaDesignPath}/src
+		"/>
+	<property name="onlineIncludes" value="
+		org*/**/*.class,
+		beaver*/**/*.class,
+		circdesigna/**/*.class,
+		" />
+	
+	<!--Define some build tasks. -->
+	<taskdef name="increment" classname="uttaifun.funant.increment" classpath="${DSS_anttasks_path}" />
+	<taskdef name="trycatch" classname="net.sf.antcontrib.logic.TryCatchTask" classpath="${ant_contrib_jar}"/>
+	<taskdef name="srchreplace" classname="uttaifun.funant.srchReplace" classpath="${DSS_anttasks_path}" />
+	<taskdef name="signit" classname="uttaifun.funant.signit" classpath="${DSS_anttasks_path}" />
+	<taskdef name="for" classname="net.sf.antcontrib.logic.ForTask" classpath="${ant_contrib_jar}"/>
+	<taskdef name="propertyregex" classname="net.sf.antcontrib.property.RegexTask" classpath="${ant_contrib_jar}"/>
+	  
+	<!-- make sure outjar / outjar2 are both only filenames, no paths. -->  
+	<target name="makeAdditional" description="Builds outjar2.">
+	</target>
+
+	
+	<!-- Note: if you get annoyed at the time makeAdditional takes to run, it's not 
+	necessary to run it each time. -->
+	<target name="default"  depends="makeAdditional, makeWeb, uploadHtml, compile.doc" />
+	<target name="default_winrun" depends="makeAdditional,makeWeb, uploadHtml, compile.doc">
+		<exec executable="cmd.exe">
+			<arg line="/C start ${basedir}/build/web/index.html" />
+		</exec>
+	</target>
+
+
+	
+	<target name="compile.java" description="Compiles the java files" >
+		<mkdir dir="./build/bin/" />
+            <!-- the PREPROC encoding is offered by the java simple processor -->
+        <javac destdir="./build/bin/" includes="**/**"
+               includeAntRuntime="false" optimize="true"
+			   debug="true" debuglevel="lines,vars,source"
+			   target="1.5" source="1.5">
+            <src path="${toCompileJava}" />
+	<classpath>
+<pathelement location="${lib}/Java/Processing/core.jar"/>
+<pathelement location="${lib}/Java/Processing/pdf/library/itext.jar"/>
+<pathelement location="${lib}/Java/Processing/pdf/library/pdf.jar"/>
+<!--
+<pathelement location="${lib}/Java/Processing/minim/library/tritonus_share.jar"/>
+<pathelement location="${lib}/Java/Processing/minim/library/jl1.0.jar"/>
+<pathelement location="${lib}/Java/Processing/minim/library/jsminim.jar"/>
+<pathelement location="${lib}/Java/Processing/minim/library/minim.jar"/>
+<pathelement location="${lib}/Java/Processing/minim/library/mp3spi1.9.4.jar"/>
+<pathelement location="${lib}/Java/Processing/minim/library/tritonus_aos.jar"/>
+<pathelement location="${lib}/Java/Processing/minim/library/tritonus_jorbis.jar"/>
+<pathelement location="${lib}/Java/Processing/minim/library/vorbisspi1.0.3.jar"/>
+<pathelement location="${dataDir}/web/natives/gluegen-rt.jar"/>
+<pathelement location="${dataDir}/web/natives/nativewindow.all.jar"/>
+<pathelement location="${dataDir}/web/natives/jogl.all.jar"/>
+-->
+			</classpath>
+        </javac>
+	</target>
+
+	<target name="makeWeb" description="Sets up the webpage form of this app." depends="compile.java">
+		<echo message="Warning: makeweb does not run makeAdditional!" />
+		<mkdir dir="./build/web/" />
+
+		<!--
+		<copy file="${lib}/Java/Processing/minim/library/jl1.0.jar" tofile="./web/jl1.0.jar" />
+		<copy file="${lib}/Java/Processing/minim/library/jsminim.jar" tofile="./web/jsminim.jar" />
+		<copy file="${lib}/Java/Processing/minim/library/minim.jar" tofile="./web/minim.jar" />
+		<copy file="${lib}/Java/Processing/minim/library/minim-spi.jar" tofile="./web/minim-spi.jar" />
+		<copy file="${lib}/Java/Processing/minim/library/mp3spi1.9.4.jar" tofile="./web/mp3spi1.9.4.jar" />
+		<copy file="${lib}/Java/Processing/minim/library/tritonus_share.jar" tofile="./web/tritonus_share.jar" />
+		-->
+
+		<!-- custom make the main jar -->
+		
+	<trycatch property="foo" reference="bar">
+  <try>
+	    <delete>
+		<fileset dir="./build/web/" includes="${DeploymentJarMatches}*" />
+		</delete>
+  </try>
+
+  <catch>
+    <echo>Could not delete old jars. No problem, but may cause clutter.</echo>
+  </catch>
+
+  <finally>
+  </finally>
+</trycatch>
+        <jar jarfile="build/web/DnaDesign.jar" basedir="build/bin/" includes="${onlineIncludes}">
+			<fileset dir="${dataDir_local}/jar" />
+		</jar>
+		<jar jarfile="build/web/${webjar}" includes="circdesignagui/**/*.class" basedir="build/bin/">
+			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/core.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/pdf/library/itext.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/pdf/library/pdf.jar" />
+<!--
+			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/minim/library/jl1.0.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/minim/library/mp3spi1.9.4.jar" />
+
+			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/minim/library/minim.jar" />
+
+			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/minim/library/jsminim.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/minim/library/minim-spi.jar" />
+			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/minim/library/tritonus_share.jar" />
+
+			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/minim/library/tritonus_jorbis.jar" />
+
+			<zipfileset excludes="META-INF/*.SF" src="${lib}/Java/Processing/minim/library/vorbisspi1.0.3.jar" />
+-->
+		</jar>
+	</target>
+	
+	<target name="compile.doc" >
+	<!-- none to compile. -->
+	</target>
+
+	<target name="uploadHtml" description="Prepares the app for the web (required for all use)">
+		<!-- sign the jar! -->
+		<echo message="NOTE: you have to create a key/value pair using KeyTool and use it to sign the jar! " />
+		
+		<signit dir="build/web/" file="${webjar}" keyname="key2011" pass="codeofdoom" />
+		<signit dir="build/web/" file="DnaDesign.jar" keyname="key2011" pass="codeofdoom" />
+		
+		<copy todir="${buildintdir}">
+			<fileset dir="${dataDir_local}/web" includes="*.html,*.jnlp" />
+		</copy>
+		<!-- replace the {CLASSNAME} with our applet -->
+		<srchreplace srcfile="${buildintdir}/web_template.html" destfile="${buildintdir}/web_template3.html" srch="{APPLETWIDTH}" rep="640" deletesrch="true" />
+		<srchreplace srcfile="${buildintdir}/web_template3.html" destfile="${buildintdir}/web_template4.html" srch="{APPLETHEIGHT}" rep="480" deletesrch="true" />
+		<srchreplace srcfile="${buildintdir}/web_template4.html" destfile="${buildintdir}/web_template6.html" srch="{CLASSLIBJAR}" rep="${webjar},DnaDesign.jar" deletesrch="true" />
+		<srchreplace srcfile="${buildintdir}/web_template6.html" destfile="${buildintdir}/index2.html" srch="{CLASSNAME}" rep="${p5Main}" deletesrch="false"/>
+		<srchreplace srcfile="${buildintdir}/web_template6.html" destfile="${buildintdir}/index3.html" srch="{CLASSNAME}" rep="${p5Main2}" deletesrch="true" />
+		<move todir="${buildintdir}/web">
+			<fileset dir="${buildintdir}" includes="*.html,*.jnlp" />
+		</move>
+		<copy todir="${buildintdir}/web">
+			<fileset dir="${dataDir_local}/web" includes="*.png,*.svg" />
+		</copy>
+	</target>
+
+</project>
