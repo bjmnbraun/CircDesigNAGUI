@@ -4,11 +4,11 @@
 	<!-- basedir="." default="default" -->
 	<!-- Path to the actual DNADesign package. -->
 	
-	<!-- BUILD INSTRUCTIONS: Set these environmental variables: DnaDesignPath -->
+	<!-- BUILD INSTRUCTIONS: Set these environmental variables: PathToCircDesigNA -->
 	
 	<!-- Example: -->
-	<!--<property name="DnaDesignPath" value="/home/benjamin/BuildAssignments/DnaDesign/DnaDesign/DNADesign" />-->
-	<!--<property name="DnaDesignPath" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\DNADesign\DNADesign" />-->
+	<!--<property name="PathToCircDesigNA" value="/home/benjamin/BuildAssignments/DnaDesign/DnaDesign/DNADesign" />-->
+	<!--<property name="PathToCircDesigNA" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\DNADesign\DNADesign" />-->
 	
 	<property name="Engine_path" value="." />
 	<property name="DSS_anttasks_path" value="${Engine_path}/DSS-anttasks.jar" />
@@ -46,7 +46,7 @@ if(max==null || property==null) {
 	<property name="taiLaunchMain" value="Deployments.${DeploymentName}" />
 	<property name="toCompileJava" value="
 		src:
-		${DnaDesignPath}/src
+		${PathToCircDesigNA}/src
 		"/>
 	<property name="onlineIncludes" value="
 		org*/**/*.class,
@@ -164,9 +164,10 @@ if(max==null || property==null) {
 	<!-- none to compile. -->
 	</target>
 
-	<target name="uploadHtml" description="Prepares the app for the web (required for all use)">
+	<target name="uploadHtml" description="Prepares the app for the web (Windows specific task, for experts only.)">
 		<!-- sign the jar! -->
-		<echo message="NOTE: you have to create a key/value pair using KeyTool and use it to sign the jar! " />
+		
+		<echo message="NOTE: you have to create a key/value pair using KeyTool and use it to sign the jar. Store them in SIGNATURE and SIGNATURE_PASS." />
 		
 		<signit dir="build/web/" file="${webjar}" keyname="${SIGNATURE}" pass="${SIGNATURE_PASS}" />
 		<signit dir="build/web/" file="DnaDesign.jar" keyname="${SIGNATURE}" pass="${SIGNATURE_PASS}" />
