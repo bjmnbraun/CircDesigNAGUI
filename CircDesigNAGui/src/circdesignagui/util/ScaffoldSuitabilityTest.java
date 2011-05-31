@@ -27,6 +27,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
+
 import circdesigna.DomainSequence;
 import circdesigna.config.CircDesigNAConfig;
 import circdesigna.energy.CircDesigNAMCSFolder;

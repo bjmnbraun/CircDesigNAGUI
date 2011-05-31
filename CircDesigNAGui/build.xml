@@ -9,7 +9,6 @@
 	<!-- Example: -->
 	<!--<property name="DnaDesignPath" value="/home/benjamin/BuildAssignments/DnaDesign/DnaDesign/DNADesign" />-->
 	<!--<property name="DnaDesignPath" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\DNADesign\DNADesign" />-->
-	<property name="DnaDesignPath" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\DNADesign\DNADesign" />
 	
 	<property name="Engine_path" value="." />
 	<property name="DSS_anttasks_path" value="${Engine_path}/DSS-anttasks.jar" />
@@ -169,8 +168,8 @@ if(max==null || property==null) {
 		<!-- sign the jar! -->
 		<echo message="NOTE: you have to create a key/value pair using KeyTool and use it to sign the jar! " />
 		
-		<signit dir="build/web/" file="${webjar}" keyname="key2011" pass="codeofdoom" />
-		<signit dir="build/web/" file="DnaDesign.jar" keyname="key2011" pass="codeofdoom" />
+		<signit dir="build/web/" file="${webjar}" keyname="${SIGNATURE}" pass="${SIGNATURE_PASS}" />
+		<signit dir="build/web/" file="DnaDesign.jar" keyname="${SIGNATURE}" pass="${SIGNATURE_PASS}" />
 		
 		<copy todir="${buildintdir}">
 			<fileset dir="${dataDir_local}/web" includes="*.html,*.jnlp" />

@@ -53,9 +53,9 @@ import circdesigna.CircDesigNA.ScorePenalty;
 import circdesigna.abstractpolymer.DnaDefinition;
 import circdesigna.config.CircDesigNAConfig;
 import circdesigna.energy.CircDesigNAMCSFolder;
+import circdesigna.energy.OneMatrixNAFolder;
 import circdesigna.impl.CircDesigNAImpl;
-
-
+import circdesigna.impl.SequencePenaltiesImpl;
 
 /**
  * Displays a window which allows for debugging of the individual components of the objective function, 
@@ -81,7 +81,7 @@ public class FoldingImplTestGui extends ThemedApplet{
 		}.start();
 	}
 	private CircDesigNAConfig config;
-	private CircDesigNAMCSFolder fil;
+	private OneMatrixNAFolder fil;
 	private StructurePenaltyTriangle triangleApplet;
 	private JPanel triangleAppletProxy;
 	private JList possibleViews;
@@ -109,6 +109,7 @@ public class FoldingImplTestGui extends ThemedApplet{
 	private void runStartRoutine() {
 		//Logic
 		config = new CircDesigNAConfig();
+		//fil = new CircDesigNAMCSFolder(config);
 		fil = new CircDesigNAMCSFolder(config);
 		
 		//Gui
@@ -236,7 +237,7 @@ public class FoldingImplTestGui extends ThemedApplet{
 	private Collection<PenaltyObject> getPenalties() {
 		ArrayList<PenaltyObject> penalties = new ArrayList();
 		try {
-			CircDesigNAImpl ddi = new CircDesigNAImpl(fil,config);
+			CircDesigNAImpl ddi = new CircDesigNAImpl(fil,new SequencePenaltiesImpl(config),config);
 			DomainDefinitions dsd = new DomainDefinitions(config);
 			DomainDefinitions.readDomainDefs(domainDefs.getText(), dsd);
 			DomainPolymerGraph dsg = new DomainPolymerGraph(dsd);

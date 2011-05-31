@@ -29,7 +29,7 @@ import processing.core.PFont;
 import circdesigna.DomainSequence;
 import circdesigna.CircDesigNA.ScorePenalty;
 import circdesigna.config.CircDesigNAConfig;
-import circdesigna.energy.CircDesigNAMCSFolder;
+import circdesigna.energy.OneMatrixNAFolder;
 import circdesigna.impl.CircDesigNAImpl.MFEHybridScore;
 import circdesigna.impl.CircDesigNAImpl.SelfFold;
 import circdesigna.impl.CircDesigNAImpl.SelfSimilarityScore;
@@ -46,7 +46,7 @@ public class StructurePenaltyTriangle extends PApplet{
 	private int[][] domain;
 	private int[][] domain_markings;
 	private ScorePenalty sp;
-	private CircDesigNAMCSFolder fil;
+	private OneMatrixNAFolder fil;
 	
 	private double foldScore;
 	public double getEvalScore(){
@@ -61,36 +61,42 @@ public class StructurePenaltyTriangle extends PApplet{
 		this.mc = mc;
 		this.config = config;
 	}
-	public void setPenalty(ScorePenalty sp, int[][] domain_sequences, int[][] nullMarkings, CircDesigNAMCSFolder fil){
+	public void setPenalty(ScorePenalty sp, int[][] domain_sequences, int[][] nullMarkings, OneMatrixNAFolder fil){
 		this.fil = fil;
+		domain = domain_sequences;
+		domain_markings = nullMarkings;
+		this.sp = sp;
 		if (sp instanceof MFEHybridScore || sp instanceof SelfFold || sp instanceof SelfSimilarityScore){
 			curSeqs = sp.getSeqs();
-			domain = domain_sequences;
-			domain_markings = nullMarkings;
-			this.sp = sp;
-			evalTriangle();
 		} else {
 			curSeqs = null;
 		}
+		evalTriangle();
 		redraw();
 	}
 	private void evalTriangle() {
-		for(int[] row : domain_markings){
-			Arrays.fill(row,0);
+		if (curSeqs!=null){
+			for(int[] row : domain_markings){
+				Arrays.fill(row,0);
+			}
 		}
-		double score = 0;
-		int len1, len2;
-		len2 = len1 = curSeqs[0].length(domain);
-		score = sp.evalScoreSub(domain, domain_markings);
-		if (sp instanceof MFEHybridScore){
-			len2 = curSeqs[1].length(domain);
-			//score = fil.mfeHybridDeltaG_viaMatrix(curSeqs[0],curSeqs[1],domain,domain_markings);
+		double score = sp.evalScoreSub(domain, domain_markings);
+		if (curSeqs!=null){
+			int len1, len2;
+			len2 = len1 = curSeqs[0].length(domain);
+			if (sp instanceof MFEHybridScore){
+				len2 = curSeqs[1].length(domain);
+				//score = fil.mfeHybridDeltaG_viaMatrix(curSeqs[0],curSeqs[1],domain,domain_markings);
+			}
+			if (sp instanceof SelfFold){
+				//score = fil.mfeSSDeltaG(curSeqs[0],domain,domain_markings);
+			}
+			traceback = fil.getTraceback();
+			nussinovScores = null;
+			if (len1 < 1000 && len2 < 1000){
+				nussinovScores = fil.getScoreMatrix(len1,len2);
+			}
 		}
-		if (sp instanceof SelfFold){
-			//score = fil.mfeSSDeltaG(curSeqs[0],domain,domain_markings);
-		}
-		traceback = fil.getTraceback();
-		nussinovScores = fil.getNussinovMatrixScore(len1,len2);
 		//int[][][] structureMatrix = fil.getMFEStructureMatrix();
 		
 		foldScore = score;
@@ -98,12 +104,12 @@ public class StructurePenaltyTriangle extends PApplet{
 	private PFont ff;
 	public void setup(){
 		ff = createFont("Arial", 20);
-		size(100, 100, P3D);
+		size(100, 100, P2D);
 	}
 
 	private void fillByMarker(DomainSequence seq1, int y, int[][] domain2) {
 
-		int cD = seq1.domainAt(y, domain) & DomainSequence.DNA_SEQ_FLAGSINVERSE;
+		int cD = seq1.domainAt(y, domain) & DomainSequence.NA_COMPLEMENT_FLAGINV;
 		int off = seq1.offsetInto(y, domain, true);
 		if (domain_markings[cD][off]!=0){
 			fill(255,0,0);
@@ -132,7 +138,7 @@ public class StructurePenaltyTriangle extends PApplet{
 				translate(0,area.y);
 				fill(0);
 				textFont(ff);
-				textAlign(CENTER,CENTER);
+				textAlign(CENTER, CENTER);
 				for(int y = 0; y < len1; y++){	
 					pushMatrix();
 					scale(1f/len2,1f/len1);
@@ -148,7 +154,7 @@ public class StructurePenaltyTriangle extends PApplet{
 				pushMatrix();
 				translate(area.x,0);
 				textFont(ff);
-				textAlign(CENTER,CENTER);
+				textAlign(CENTER, CENTER);
 				for(int x = 0; x < len2; x++){
 					pushMatrix();
 					scale(1f/len2,1f/len1);
@@ -169,29 +175,35 @@ public class StructurePenaltyTriangle extends PApplet{
 				for(int y = 0; y < len1; y++){
 					for(int x = 0; x < len2; x++){
 						noStroke();
-						fill(20,40,100,(float)nussinovScores[y][x]*255 /(1+(float)foldScore));
+						float a;
+						if (nussinovScores!=null){
+							a = (float)-nussinovScores[y][x]*255 /(1+(float)foldScore);
+						} else {
+							a = 0;
+						}
+						fill(20,40,100,a);
 						ellipseMode(CORNER);
 						if (curSeqs.length==2 || y < x){
 							rect(x,y,1,1);
-						}
-						if (sp instanceof SelfFold){
-							if (x <= y){
-								fill(100,100,100);
-								rect(x,y,1,1);
-							}
+						} else {
+							fill(100,100,100);
+							rect(x,y,1,1);
 						}
 					}
 				}
 				translate(.5f,.5f);
 				
 				stroke(0);
-				strokeWeight(4);
+				strokeWeight(.5f);
+				noFill();
 				Point lastPoint = null;
-				for(Point t : traceback){
-					if (lastPoint!=null){
-						line(lastPoint.y,lastPoint.x,t.y,t.x);
+				if (traceback!=null){
+					for(Point t : traceback){
+						if (t!=null && lastPoint!=null){
+							line(lastPoint.y,lastPoint.x,t.y,t.x);
+						}
+						lastPoint = t;
 					}
-					lastPoint = t;
 				}
 			} catch (Throwable e){
 				//

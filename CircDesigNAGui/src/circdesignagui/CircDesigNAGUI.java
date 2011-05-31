@@ -226,9 +226,13 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 						public void actionPerformed(ActionEvent e) {
 							updatePreview();
 							if (CurrentlyNoError){
-								String[] duplifiedSystem = CircDesigNA_SharedUtils.duplicateSystem(DomainDef.getText(),Molecules.getText());
-								DomainDef.setText(duplifiedSystem[0]);
-								Molecules.setText(duplifiedSystem[1]);
+								try {
+									String[] duplifiedSystem = CircDesigNA_SharedUtils.duplicateSystem(DomainDef.getText(),Molecules.getText());
+									DomainDef.setText(duplifiedSystem[0]);
+									Molecules.setText(duplifiedSystem[1]);
+								} catch (Throwable f){
+									reportError(f.getMessage(), null);
+								}
 							}
 						}
 					});

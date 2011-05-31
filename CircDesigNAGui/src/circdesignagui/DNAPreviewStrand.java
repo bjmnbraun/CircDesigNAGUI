@@ -20,8 +20,8 @@
 package circdesignagui;
 
 
-import static circdesigna.DomainSequence.DNA_COMPLEMENT_FLAG;
-import static circdesigna.DomainSequence.DNA_SEQ_FLAGSINVERSE;
+import static circdesigna.DomainSequence.NA_COMPLEMENT_FLAG;
+import static circdesigna.DomainSequence.NA_COMPLEMENT_FLAGINV;
 
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
@@ -407,7 +407,7 @@ public class DNAPreviewStrand extends PApplet{
 						if (id == -1){
 							renderLength += add5pGapR;
 						} else {
-							renderLength += dsd.domainLengths[id & DNA_SEQ_FLAGSINVERSE];
+							renderLength += dsd.domainLengths[id & NA_COMPLEMENT_FLAGINV];
 						}
 					}
 					
@@ -426,7 +426,7 @@ public class DNAPreviewStrand extends PApplet{
 					if (id == -1){
 						numBases= 1;
 					} else {
-						numBases= dsd.domainLengths[id & DNA_SEQ_FLAGSINVERSE];
+						numBases= dsd.domainLengths[id & NA_COMPLEMENT_FLAGINV];
 					}
 					for(int k = 0; k < numBases; k++){
 						float cDLength = renderPolymerGraph_LengthCache[i]+k;
@@ -453,7 +453,7 @@ public class DNAPreviewStrand extends PApplet{
 							if (pair!=-1){
 								stroke(pairColor);
 								if (actuallyDraw){
-									int lenPair = dsd.domainLengths[dpg.getDomain(pair)&DNA_SEQ_FLAGSINVERSE];
+									int lenPair = dsd.domainLengths[dpg.getDomain(pair)&NA_COMPLEMENT_FLAGINV];
 									float radP = dTheta*(renderPolymerGraph_LengthCache[pair]+(lenPair-1-k));
 									float x2 = cos(radP);
 									float y2 = sin(radP);
@@ -512,7 +512,7 @@ public class DNAPreviewStrand extends PApplet{
 					}
 					for(int p : ds.sequencePartsInvolved){
 						int domain = dsg.domains[p];
-						int seqLen = dsd.domainLengths[domain & DNA_SEQ_FLAGSINVERSE];
+						int seqLen = dsd.domainLengths[domain & NA_COMPLEMENT_FLAGINV];
 						for(int k = 0; k < seqLen; k++){
 							if (k == (seqLen-1) / 2){
 								pushMatrix_drawMolecule();
@@ -539,7 +539,7 @@ public class DNAPreviewStrand extends PApplet{
 					int domain = dsg.domains[ds.sequencePartsInvolved[0]];
 					int domain2 = dsg.domains[ds.sequencePartsInvolved[1]];
 					//They better be the same lengths...
-					int seqLen = dsd.domainLengths[domain & DNA_SEQ_FLAGSINVERSE];
+					int seqLen = dsd.domainLengths[domain & NA_COMPLEMENT_FLAGINV];
 					int newShaftLength = shaftLength + seqLen;
 					if (newShaftLength>longestHairpin){
 						longestHairpin = newShaftLength;
@@ -714,13 +714,13 @@ public class DNAPreviewStrand extends PApplet{
 				return TWO_PI/(hairpinSize+ringAdd);
 			}
 			private void drawBase(float eW, int domain, int k) {
-				boolean isComp = (domain & DNA_COMPLEMENT_FLAG)!=0;
+				boolean isComp = (domain & NA_COMPLEMENT_FLAG)!=0;
 				/**
 				 * Note: constraints 
 				 */
 				char constraint = '-';
 				
-				constraint = dsd.getConstraint(domain).charAt(isComp?dsd.domainLengths[domain&DNA_SEQ_FLAGSINVERSE]-1-k:k);
+				constraint = dsd.getConstraint(domain).charAt(isComp?dsd.domainLengths[domain&NA_COMPLEMENT_FLAGINV]-1-k:k);
 				
 				int sCol = color(0); //the Good color.
 				switch(Character.toUpperCase(constraint)){
