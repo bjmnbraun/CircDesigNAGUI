@@ -53,6 +53,7 @@ import javax.swing.event.CaretListener;
 import javax.swing.plaf.basic.BasicBorders.MarginBorder;
 import javax.swing.text.JTextComponent;
 
+import circdesigna.BannedPatterns;
 import circdesigna.CircDesigNA;
 import circdesigna.CircDesigNA_SharedUtils;
 import circdesigna.SequenceDesigner;
@@ -295,15 +296,30 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 				}
 			};
 			
+			JButton ModifyBannedPatterns = new JButton("Add Banned Patterns"){
+				{
+					addActionListener(new ActionListener(){
+						public void actionPerformed(ActionEvent e) {
+							if (modalPanelOpen()){
+								return;
+							}
+							
+							new ModifyBannedPatternsListPanel(CircDesigNAGUI.this, monoSpaceFont);
+						}
+					});
+				}
+			};
+			
 			RunDesignerBox.add(GoToDesigner);
 			RunDesignerBox.add(DuplicateReaction);
 			RunDesignerBox.add(ModifyCodonTable);
+			RunDesignerBox.add(ModifyBannedPatterns);
 			RunDesignerBox.add(RnaDnaToggle);
 			RunDesignerBox.add(SavePreviewImage);
 			
 			JComponent holder = skinGroup(RunDesignerBox, "Run Designer");
-			su.addPreferredSize(RunDesignerBox, 1f-fractionLeftPanel, 0, 0, 120);
-			su.addPreferredSize(holder, 1f-fractionLeftPanel, 0, 0, 120);
+			su.addPreferredSize(RunDesignerBox, 1f-fractionLeftPanel, 0, 0, 140);
+			su.addPreferredSize(holder, 1f-fractionLeftPanel, 0, 0, 140);
 
 			rightPanel.add(holder);	
 		}
@@ -518,6 +534,15 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 		//Test it first
 		new CodonCode(text, CircDesignConfig);
 		CircDesignConfig.customCodonTable = text;
+	}
+	
+	public String getCurrentBannedWordsList() {
+		return CircDesignConfig.bannedPatternsList;
+	}
+	public void updateBannedWordsList(String text){
+		//Test it first
+		new BannedPatterns(text, CircDesignConfig);
+		CircDesignConfig.bannedPatternsList = text;
 	}
 
 	//Cursor update!

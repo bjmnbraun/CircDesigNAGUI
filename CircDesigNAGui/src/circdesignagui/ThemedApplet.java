@@ -36,7 +36,7 @@ import javax.swing.border.TitledBorder;
  * Handles the customizable color-scheme. This is controlled by the running webpage.
  */
 public abstract class ThemedApplet extends Applet implements ModalizableComponent{
-	public Color THEMECOL0,THEMECOL1,THEMECOL2,THEMECOL3,THEMECOL4;
+	public Color THEMECOL0 = Color.black,THEMECOL1 = Color.black,THEMECOL2 = Color.black,THEMECOL3 = Color.black,THEMECOL4 = Color.black;
 	public void parseThemeColors(){
 		THEMECOL0 = parseColorFromParam("themecol0");
 		THEMECOL1 = parseColorFromParam("themecol1");
@@ -60,6 +60,7 @@ public abstract class ThemedApplet extends Applet implements ModalizableComponen
 		        int width = getWidth();
 		        int height = getHeight();
 
+		        
 				((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, // Anti-alias!
 				        RenderingHints.VALUE_ANTIALIAS_ON);
 		        // Paint a rounded rectangle in the background.

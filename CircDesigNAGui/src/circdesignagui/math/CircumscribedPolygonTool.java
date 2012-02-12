@@ -56,6 +56,9 @@ public class CircumscribedPolygonTool {
 	 * Modifies input to fill in the theta and R fields.
 	 */
 	public static void solvePolygonProblem(CircumscribedPolygon input){
+		if (input == null){
+			return;
+		}
 		//Make a guess at a good value of R:
 		//NOTATION:
 		//S: a side length
@@ -63,14 +66,12 @@ public class CircumscribedPolygonTool {
 		//R: the radius of the circumscribing circle
 		int n = input.S.length;
 		
-		
 		float avgS = 0;
 		for(float k : input.S){
 			avgS += k;
 		}
 		avgS /= n;
 		input.R = (float) (avgS/Math.sqrt(2*(1-Math.cos(2*Math.PI/n))));
-		
 		
 		float maxS = 0;
 		for(float k : input.S){

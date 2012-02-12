@@ -52,6 +52,7 @@ public class ModifyCodonTablePanel {
 					public void actionPerformed(ActionEvent e) {
 						try {
 							mc.updateCodonTable(currentCodons.getText());
+							setText("OK! Click again to update codons.");
 						} catch (Throwable f){
 							setText("Error: "+f.getMessage());
 						}

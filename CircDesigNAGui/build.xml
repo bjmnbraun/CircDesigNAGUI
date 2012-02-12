@@ -181,12 +181,24 @@ if(max==null || property==null) {
 		<srchreplace srcfile="${buildintdir}/web_template4.html" destfile="${buildintdir}/web_template6.html" srch="{CLASSLIBJAR}" rep="${webjar},DnaDesign.jar" deletesrch="true" />
 		<srchreplace srcfile="${buildintdir}/web_template6.html" destfile="${buildintdir}/index2.html" srch="{CLASSNAME}" rep="${p5Main}" deletesrch="false"/>
 		<srchreplace srcfile="${buildintdir}/web_template6.html" destfile="${buildintdir}/index3.html" srch="{CLASSNAME}" rep="${p5Main2}" deletesrch="true" />
+		
 		<move todir="${buildintdir}/web">
 			<fileset dir="${buildintdir}" includes="*.html,*.jnlp" />
 		</move>
 		<copy todir="${buildintdir}/web">
 			<fileset dir="${dataDir_local}/web" includes="*.png,*.svg" />
 		</copy>
+		
+		<copy todir="${buildintdir}">
+			<fileset dir="${dataDir_local}/web" includes="CommandLine.txt" />
+		</copy>
+			
+		<srchreplace srcfile="${buildintdir}/CommandLine.txt" destfile="${buildintdir}/CommandLine_Windows.txt" srch="{CLASSLIBJARWIN}" rep="${webjar};DnaDesign.jar" deletesrch="false" />
+		<srchreplace srcfile="${buildintdir}/CommandLine.txt" destfile="${buildintdir}/CommandLine_Linux.txt" srch="{CLASSLIBJARWIN}" rep="${webjar}:DnaDesign.jar" deletesrch="true" />
+        <zip zipfile="build/web/CircDesigNA.zip">
+			<fileset dir="${buildintdir}/web" excludes="*.zip" />
+			<fileset dir="${buildintdir}" includes="CommandLine_*" />
+		</zip>
+		
 	</target>
-
 </project>

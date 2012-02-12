@@ -76,6 +76,8 @@ public class DnaDesignOutputPanel extends JPanel{
 		}
 		if (setupResults){
 			textArea.setText(design.getResult(alternativeResults[resultSelector.getSelectedIndex()]));
+		} else {
+			textArea.setText(design.getResult());
 		}
 	}
 }
