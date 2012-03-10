@@ -1,0 +1,1 @@
+java -cp {CLASSLIBJARWIN} -Dthemecol0=#FFF7BC -Dthemecol1=#FEC44F -Dthemecol2=#D95F0E -Dthemecol3=#ED303C -Dthemecol4=#3B8183 circdesignagui.CircDesigNA_frame 640 550
