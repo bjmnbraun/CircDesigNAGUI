@@ -47,7 +47,7 @@ import circdesigna.DomainStructureBNFTree.ThreePFivePOpenJunc;
 import circdesigna.config.CircDesigNAConfig;
 import circdesigna.exception.InvalidDNAMoleculeException;
 import circdesigna.exception.InvalidDomainDefsException;
-import circdesignagui.math.CircumscribedPolygonTool.CircumscribedPolygon;
+import circdesigna.geometry.CircumscribedPolygonTool.CircumscribedPolygon;
 
 /**
  * An embedded PApplet for displaying molecule previews. A number of keystrokes

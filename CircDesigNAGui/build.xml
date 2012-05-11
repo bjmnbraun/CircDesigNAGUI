@@ -176,11 +176,15 @@ if(max==null || property==null) {
 			<fileset dir="${dataDir_local}/web" includes="*.html,*.jnlp" />
 		</copy>
 		<!-- replace the {CLASSNAME} with our applet -->
-		<srchreplace srcfile="${buildintdir}/web_template.html" destfile="${buildintdir}/web_template3.html" srch="{APPLETWIDTH}" rep="640" deletesrch="true" />
+		<srchreplace srcfile="${buildintdir}/fullscreen.html" destfile="${buildintdir}/web_template3.html" srch="{APPLETWIDTH}" rep="640" deletesrch="true" />
 		<srchreplace srcfile="${buildintdir}/web_template3.html" destfile="${buildintdir}/web_template4.html" srch="{APPLETHEIGHT}" rep="480" deletesrch="true" />
 		<srchreplace srcfile="${buildintdir}/web_template4.html" destfile="${buildintdir}/web_template6.html" srch="{CLASSLIBJAR}" rep="${webjar},DnaDesign.jar" deletesrch="true" />
-		<srchreplace srcfile="${buildintdir}/web_template6.html" destfile="${buildintdir}/index2.html" srch="{CLASSNAME}" rep="${p5Main}" deletesrch="false"/>
-		<srchreplace srcfile="${buildintdir}/web_template6.html" destfile="${buildintdir}/index3.html" srch="{CLASSNAME}" rep="${p5Main2}" deletesrch="true" />
+		<srchreplace srcfile="${buildintdir}/web_template6.html" destfile="${buildintdir}/fullscreen.html" srch="{CLASSNAME}" rep="${p5Main}" deletesrch="true"/>
+		
+		<srchreplace srcfile="${buildintdir}/index.html" destfile="${buildintdir}/web_template3.html" srch="{APPLETWIDTH}" rep="640" deletesrch="true" />
+		<srchreplace srcfile="${buildintdir}/web_template3.html" destfile="${buildintdir}/web_template4.html" srch="{APPLETHEIGHT}" rep="480" deletesrch="true" />
+		<srchreplace srcfile="${buildintdir}/web_template4.html" destfile="${buildintdir}/web_template6.html" srch="{CLASSLIBJAR}" rep="${webjar},DnaDesign.jar" deletesrch="true" />
+		<srchreplace srcfile="${buildintdir}/web_template6.html" destfile="${buildintdir}/index.html" srch="{CLASSNAME}" rep="${p5Main}" deletesrch="true"/>
 		
 		<move todir="${buildintdir}/web">
 			<fileset dir="${buildintdir}" includes="*.html,*.jnlp" />

@@ -34,7 +34,7 @@
 		left: 50%;
 		height: 630px;
 		background-color: #FFFFFF;
-		width: 650px;
+		width: 644px; 
 		margin-left: -320px;
 		margin-top: 0px;
 		margin-bottom: 0px;
@@ -53,23 +53,38 @@
 		    </h3>
 			</left>
 			<center>
-		    <div style="background-color:#3B8183">
-			<left>
+		    <div style="background-color:#3B8183; padding-bottom:2px; ">
 			<p class="overtop">
 		    Circ.DesigNA is a utility for the automated design of reactants in DNA reactions.
 		    </p>
 			<p style="margin:0px">
-			| <a href="mailto:bjmnbraun@mail.utexas.edu">Contact</a>  | Go <a href="index2.html">Fullscreen</a> | <a href="http://openwetware.org/wiki/Biomod/2011/UTAustin/Hook%27em_Hybridizers/CircDesigNA/Help">Help!</a> |
+			| <a href="mailto:bjmnbraun@mail.utexas.edu">Contact</a>  | Go <a href="fullscreen.html">Fullscreen</a> | <a href="CircDesigNA.zip">Download</a> | <a href="http://openwetware.org/wiki/Biomod/2011/UTAustin/Hook%27em_Hybridizers/CircDesigNA/Help">Help!</a> |
 			</p>
-			</left>
-			<center>
-			<iframe width="640px" height="480px" src="index2.html">
-				<p>Your browser does not support iframes. <a href="index2.html">Open DnaDesign Alone</a></p>
-			</iframe>
-			</center>
 			</div>
+			<center>
+			<div style="background-color:#AAAAAA; padding-top:2px; ">
+			
+<!-- taken from fullscreen.html, width and height modified.-->							
+		<applet code="{CLASSNAME}"
+      width="640"
+      height="480";
+      archive="{CLASSLIBJAR}">
+	<param name="themecol0" value="#FFF7BC">
+	<param name="themecol1" value="#FEC44F">
+	<param name="themecol2" value="#D95F0E">
+	<param name="themecol3" value="#ED303C">
+	<param name="themecol4" value="#3B8183">
+   <param name="codebase_lookup" value="false">
+   <param name="subapplet.displayname" value="JOGL-Enhanced Applet">
+   <param name="subapplet.classname" value="{CLASSNAME}">
+   <param name="noddraw.check" value="false">
+   <param name="progressbar" value="true">
+   <param name="java_arguments" value="-Dsun.java2d.noddraw=true">
+</applet>
+
+			</div>
+			</center>
 		</div>
 		</div>
 	</body>
-
 </html>
