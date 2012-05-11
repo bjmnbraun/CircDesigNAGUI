@@ -27,7 +27,7 @@ import java.util.Scanner;
 
 import circdesigna.DomainSequence;
 import circdesigna.config.CircDesigNAConfig;
-import circdesigna.energy.CircDesigNAMCSFolder;
+import circdesigna.energy.ConstraintsNAFoldingImpl;
 
 
 
@@ -73,7 +73,7 @@ public class ScaffoldSuitabilitySummary {
 				DomainSequence seq2 = new DomainSequence();
 				seq1.setDomains(0,null);
 				seq2.setDomains(1,null);
-				CircDesigNAMCSFolder fl = new CircDesigNAMCSFolder(config);
+				ConstraintsNAFoldingImpl fl = new ConstraintsNAFoldingImpl(config);
 				
 				while(in.hasNextLine()){
 					String[] line = in.nextLine().split("\\s+");

@@ -30,7 +30,7 @@ import java.util.Scanner;
 
 import circdesigna.DomainSequence;
 import circdesigna.config.CircDesigNAConfig;
-import circdesigna.energy.CircDesigNAMCSFolder;
+import circdesigna.energy.ConstraintsNAFoldingImpl;
 
 
 
@@ -99,7 +99,7 @@ public class ScaffoldSuitabilityTest {
 	private static final String absPathToHybridMinMod = "\"C:\\Users\\Benjamin\\CLASSWORK\\002. UT UNDERGRADUATE GENERAL\\EllingtonLab\\AutoAmplifierDesign\\unafold\\hybrid-min.exe\" --NA=DNA ";
 
 	private static void scaffoldSuitability(String seqT, int N, CircDesigNAConfig config, boolean doRevComp) throws IOException, InterruptedException {
-		CircDesigNAMCSFolder fi = new CircDesigNAMCSFolder(config);
+		ConstraintsNAFoldingImpl fi = new ConstraintsNAFoldingImpl(config);
 		
 		int[][] domain = new int[N][];
 		domain[0] = new int[N];

@@ -179,8 +179,8 @@ public class RunDesignerPanel {
 			private boolean designerRunning = false, designerFinished1 = false;
 			private void setDesignerRunning(double i) {
 				String append = "Designer Running (Click to get Intermediate Result.)";
-				if(cDesign.getIterationCount()>0){
-					append += "Score: "+String.format("%.2f",i)+" Iterations: "+cDesign.getIterationCount();
+				if(cDesign.getCurrentIteration()>0){
+					append += "Score: "+String.format("%.2f",i)+" Iteration: "+cDesign.getCurrentIteration();
 				}
 				setText(append);
 			}
@@ -227,10 +227,11 @@ public class RunDesignerPanel {
 		});
 		
 		final JPanel openModalDialog = ModalUtils.openModalDialog(mc,monoSpaceFont, new Runnable(){;
-		public void run(){
-			cDesign.abort();
-			showGraph.setVisible(false);
-		}
+			public void run(){
+				//Run on closing
+				cDesign.abort();
+				showGraph.setVisible(false);
+			}
 		});
 		
 		JPanel DisplayTabs = new JPanel();
@@ -245,7 +246,7 @@ public class RunDesignerPanel {
 						showText.setVisible(true);
 						showOptions.setVisible(false);
 						enableAllBut(allThree,0);
-						openModalDialog.validate();
+						openModalDialog.invalidate();
 						for(ActionListener al : actionOnRunningDesigner.getListeners(ActionListener.class)){
 							al.actionPerformed(null);
 						}
@@ -259,7 +260,7 @@ public class RunDesignerPanel {
 					public void actionPerformed(ActionEvent e) {
 						showGraph.setVisible(true);
 						enableAllBut(allThree,1);
-						openModalDialog.validate();									
+						openModalDialog.invalidate();									
 						for(ActionListener al : actionOnRunningDesigner.getListeners(ActionListener.class)){
 							al.actionPerformed(null);
 						}
@@ -275,7 +276,7 @@ public class RunDesignerPanel {
 						showOptions.setVisible(true);
 						showText.setVisible(false);
 						enableAllBut(allThree,2);
-						openModalDialog.validate();
+						openModalDialog.invalidate();
 						for(ActionListener al : actionOnRunningDesigner.getListeners(ActionListener.class)){
 							al.actionPerformed(null);
 						}
@@ -349,6 +350,8 @@ public class RunDesignerPanel {
 		for(ActionListener q : GoToGraphDisplay.getActionListeners()){
 			q.actionPerformed(null);
 		}
+		
+		showGraph.invalidate();
 	}
 	private static void enableAllBut(Component[] array, int but){
 		for(int k = 0; k < array.length; k++){

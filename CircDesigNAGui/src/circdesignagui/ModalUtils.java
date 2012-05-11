@@ -115,6 +115,7 @@ public class ModalUtils {
 				modalPanel.validate();
 			}
 		});
+		
 		return leftSide;
 	}
 

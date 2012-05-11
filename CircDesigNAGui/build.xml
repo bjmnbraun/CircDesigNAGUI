@@ -8,7 +8,7 @@
 	
 	<!-- Example: -->
 	<!--<property name="PathToCircDesigNA" value="/home/benjamin/BuildAssignments/DnaDesign/DnaDesign/DNADesign" />-->
-	<!--<property name="PathToCircDesigNA" value="C:\Users\Benjamin\PROGRAMMING\Personal\GithubRepos\DNADesign\DNADesign" />-->
+	<!--<property name="PathToCircDesigNA" value="C:\Users\Benjamin\Workspaces\CircDesigNA" />-->
 	
 	<property name="Engine_path" value="." />
 	<property name="DSS_anttasks_path" value="${Engine_path}/DSS-anttasks.jar" />

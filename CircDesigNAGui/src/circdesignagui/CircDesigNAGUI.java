@@ -23,6 +23,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -30,6 +31,8 @@ import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -64,7 +67,6 @@ import circdesigna.exception.InvalidDomainDefsException;
 import circdesigna.impl.CodonCode;
 import circdesignagui.DNAPreviewStrand.UpdateSuccessfulException;
 
-
 /**
  * Main GUI class. Lays out the applet, but does not handle the window that pops up when a help button is pressed
  * or the one that pops up when design occurs. (see HelpButton and RunDesignerPanel, respectively)
@@ -80,11 +82,11 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 		parseThemeColors();
 		setBackground(Color.white);
 		started = true;
-		SwingUtilities.invokeLater(new Runnable(){
-			public void run(){
+		//SwingUtilities.invokeLater(new Runnable(){
+		//	public void run(){
 				runStartRoutine();
-			}
-		});
+		//	}
+		//});
 	}
 	private void runStartRoutine(){
 		//Logic: This config object is passed around to all implementers of CircDesigNASystemElement.
@@ -263,7 +265,7 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 					for(int k = 0; k < RnaDnaTogglA.length; k++){
 						RnaDnaTogglA[k].setEnabled(k!=id);
 					}
-					RnaDnaToggle.validate();
+					RnaDnaToggle.invalidate();
 				}
 			}
 			final RnaDnaToggleHandler RnaDnaToggleHandle = new RnaDnaToggleHandler();
@@ -402,8 +404,8 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 		overlay.setOpaque(false);
 		modalPanel = new JPanel(){
 			public void validate(){
-				super.validate();
 				fixAWT();
+				super.validate();
 			}
 		};
 		modalPanel.setOpaque(false);
@@ -411,10 +413,10 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 		su.addPreferredSize(modalPanel, .9f,.9f); //Left half
 		bottom.add(overlay, JLayeredPane.MODAL_LAYER);
 		
-		su.addPreferredSize(bottom, 1f, 1f, 0, 0); //Whole screen.
+		//su.addPreferredSize(bottom, 1f, 1f, 0, 0); //Whole screen.
 		
 		//Bottom is whole screen
-		setLayout(new OverlayLayout(this));
+		setLayout(new BorderLayout());
 		add(PreviewSeqs);
 		add(PreviewGraph);
 		add(bottom);
@@ -424,8 +426,9 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 		PreviewSeqs.setVisible(true);
 		
 		//Calls necessitated by difficult to understand AWT interactions
-		validate();
-		fixAWT();
+		//validate();
+		invalidate();
+		
 	}
 	private TreeMap<String, String> getHelpFile_memo;
 	private String getHelpFile(String string) {
@@ -481,7 +484,6 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 		super.paint(g);
 	}
 	private void fixAWT(){
-		su.pushSizes(getWidth(), getHeight());
 		if(modalPanel!=null && PreviewSeqs!=null){
 			if (modalPanel.getComponentCount()>0){
 				//PreviewSeqs.setPreferredSize(new Dimension(0,0));
@@ -489,11 +491,11 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 			} else {
 				PreviewSeqs.setVisible(true);
 			}
-		} 
+		}
 	}
 	public void invalidate(){
 		//Good time as any.
-		//su.pushSizes(getWidth(), getHeight());
+		su.pushSizes(getWidth(), getHeight());
 		fixAWT();
 		for(Runnable q : modalScale){
 			q.run();

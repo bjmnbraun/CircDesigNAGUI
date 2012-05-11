@@ -52,8 +52,8 @@ import circdesigna.DomainPolymerGraph;
 import circdesigna.CircDesigNA.ScorePenalty;
 import circdesigna.abstractpolymer.DnaDefinition;
 import circdesigna.config.CircDesigNAConfig;
-import circdesigna.energy.CircDesigNAMCSFolder;
-import circdesigna.energy.OneMatrixNAFolder;
+import circdesigna.energy.ConstraintsNAFoldingImpl;
+import circdesigna.energy.OneMatrixNAFolding;
 import circdesigna.impl.CircDesigNAImpl;
 import circdesigna.impl.SequencePenaltiesImpl;
 
@@ -81,7 +81,7 @@ public class FoldingImplTestGui extends ThemedApplet{
 		}.start();
 	}
 	private CircDesigNAConfig config;
-	private OneMatrixNAFolder fil;
+	private ConstraintsNAFoldingImpl fil;
 	private StructurePenaltyTriangle triangleApplet;
 	private JPanel triangleAppletProxy;
 	private JList possibleViews;
@@ -110,7 +110,7 @@ public class FoldingImplTestGui extends ThemedApplet{
 		//Logic
 		config = new CircDesigNAConfig();
 		//fil = new CircDesigNAMCSFolder(config);
-		fil = new CircDesigNAMCSFolder(config);
+		fil = new ConstraintsNAFoldingImpl(config);
 		
 		//Gui
 		

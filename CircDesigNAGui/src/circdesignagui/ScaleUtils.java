@@ -40,7 +40,10 @@ public class ScaleUtils {
 			if (val[4]>0){
 				yWise = (int) (xWise / val[4] + val[3]);
 			}
-			preferredSizesKey.get(k).setPreferredSize(new Dimension(xWise,yWise));
+			Dimension neu = new Dimension(xWise,yWise);
+			//if (!preferredSizesKey.get(k).getPreferredSize().equals(neu)){
+				preferredSizesKey.get(k).setPreferredSize(neu);
+			//}
 		}
 	}
 	public void addPreferredSize(Component listen, float x, float y, float ar) {
@@ -55,3 +58,4 @@ public class ScaleUtils {
 		preferredSizes.add(new float[]{x,y, xoff, yoff, ar});
 	}
 }
+

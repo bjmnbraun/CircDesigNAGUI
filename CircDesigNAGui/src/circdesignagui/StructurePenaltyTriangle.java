@@ -29,9 +29,9 @@ import processing.core.PFont;
 import circdesigna.DomainSequence;
 import circdesigna.CircDesigNA.ScorePenalty;
 import circdesigna.config.CircDesigNAConfig;
-import circdesigna.energy.OneMatrixNAFolder;
-import circdesigna.impl.CircDesigNAImpl.MFEHybridScore;
-import circdesigna.impl.CircDesigNAImpl.SelfFold;
+import circdesigna.energy.OneMatrixNAFolding;
+import circdesigna.impl.CircDesigNAImpl.MFEHybridNonlegalScore;
+import circdesigna.impl.CircDesigNAImpl.SelfFoldNonlegalScore;
 import circdesigna.impl.CircDesigNAImpl.SelfSimilarityScore;
 
 /**
@@ -46,7 +46,7 @@ public class StructurePenaltyTriangle extends PApplet{
 	private int[][] domain;
 	private int[][] domain_markings;
 	private ScorePenalty sp;
-	private OneMatrixNAFolder fil;
+	private OneMatrixNAFolding fil;
 	
 	private double foldScore;
 	public double getEvalScore(){
@@ -61,12 +61,12 @@ public class StructurePenaltyTriangle extends PApplet{
 		this.mc = mc;
 		this.config = config;
 	}
-	public void setPenalty(ScorePenalty sp, int[][] domain_sequences, int[][] nullMarkings, OneMatrixNAFolder fil){
+	public void setPenalty(ScorePenalty sp, int[][] domain_sequences, int[][] nullMarkings, OneMatrixNAFolding fil){
 		this.fil = fil;
 		domain = domain_sequences;
 		domain_markings = nullMarkings;
 		this.sp = sp;
-		if (sp instanceof MFEHybridScore || sp instanceof SelfFold || sp instanceof SelfSimilarityScore){
+		if (sp instanceof MFEHybridNonlegalScore || sp instanceof SelfFoldNonlegalScore || sp instanceof SelfSimilarityScore){
 			curSeqs = sp.getSeqs();
 		} else {
 			curSeqs = null;
@@ -84,11 +84,11 @@ public class StructurePenaltyTriangle extends PApplet{
 		if (curSeqs!=null){
 			int len1, len2;
 			len2 = len1 = curSeqs[0].length(domain);
-			if (sp instanceof MFEHybridScore){
+			if (sp instanceof MFEHybridNonlegalScore){
 				len2 = curSeqs[1].length(domain);
 				//score = fil.mfeHybridDeltaG_viaMatrix(curSeqs[0],curSeqs[1],domain,domain_markings);
 			}
-			if (sp instanceof SelfFold){
+			if (sp instanceof SelfFoldNonlegalScore){
 				//score = fil.mfeSSDeltaG(curSeqs[0],domain,domain_markings);
 			}
 			traceback = fil.getTraceback();
