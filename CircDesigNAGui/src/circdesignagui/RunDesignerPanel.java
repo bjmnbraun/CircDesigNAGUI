@@ -260,7 +260,8 @@ public class RunDesignerPanel {
 					public void actionPerformed(ActionEvent e) {
 						showGraph.setVisible(true);
 						enableAllBut(allThree,1);
-						openModalDialog.invalidate();									
+						openModalDialog.invalidate();
+						showGraph.invalidate();								
 						for(ActionListener al : actionOnRunningDesigner.getListeners(ActionListener.class)){
 							al.actionPerformed(null);
 						}
@@ -345,13 +346,11 @@ public class RunDesignerPanel {
 			private boolean[] stackOverFlowHack = new boolean[]{false};
 		});
 		showGraph.setDesigner(cDesign);
-
+		
 		//Begin in graph view
 		for(ActionListener q : GoToGraphDisplay.getActionListeners()){
 			q.actionPerformed(null);
 		}
-		
-		showGraph.invalidate();
 	}
 	private static void enableAllBut(Component[] array, int but){
 		for(int k = 0; k < array.length; k++){

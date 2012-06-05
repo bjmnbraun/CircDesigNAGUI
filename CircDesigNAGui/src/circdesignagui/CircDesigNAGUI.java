@@ -428,7 +428,8 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 		//Calls necessitated by difficult to understand AWT interactions
 		//validate();
 		invalidate();
-		
+		PreviewGraph.invalidate();
+		PreviewSeqs.invalidate();
 	}
 	private TreeMap<String, String> getHelpFile_memo;
 	private String getHelpFile(String string) {
