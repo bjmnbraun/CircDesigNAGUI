@@ -35,8 +35,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.OverlayLayout;
 
@@ -206,11 +204,11 @@ public class RunDesignerPanel {
 									}
 									if (cDesign.isFinished()){
 										if (cDesign.isEndConditionError()){
-											setText("Designer Failed. See text output.");
+											setText("Designer halted. See text output.");
 										} else {
 											setText("Designer Finished");
 										}
-										showText.updateResult();
+										showText.fetchResults();
 										designerFinished1 = true;
 										repaint();
 									}
@@ -218,7 +216,7 @@ public class RunDesignerPanel {
 							}.start();
 						} else {
 							//Get intermediate result.
-							showText.updateResult();
+							showText.fetchResults();
 						}
 						repaint();
 					}
@@ -236,9 +234,9 @@ public class RunDesignerPanel {
 		
 		JPanel DisplayTabs = new JPanel();
 		DisplayTabs.setLayout(new GridLayout(0,3));
-		JButton GoToVisualDisplay,GoToGraphDisplay,GoToOptions;
+		JButton GoToText,GoToGraphDisplay,GoToOptions;
 		final JButton[] allThree = new JButton[3];
-		DisplayTabs.add(allThree[0] = GoToVisualDisplay = skinButton(new JButton("Text Output"){
+		DisplayTabs.add(allThree[0] = GoToText = skinButton(new JButton("Text Output"){
 			{
 				addActionListener(new ActionListener(){
 					public void actionPerformed(ActionEvent e) {
@@ -259,9 +257,10 @@ public class RunDesignerPanel {
 				addActionListener(new ActionListener(){
 					public void actionPerformed(ActionEvent e) {
 						showGraph.setVisible(true);
+						showOptions.setVisible(false);
+						showText.setVisible(false);
 						enableAllBut(allThree,1);
 						openModalDialog.invalidate();
-						showGraph.invalidate();								
 						for(ActionListener al : actionOnRunningDesigner.getListeners(ActionListener.class)){
 							al.actionPerformed(null);
 						}
@@ -347,8 +346,14 @@ public class RunDesignerPanel {
 		});
 		showGraph.setDesigner(cDesign);
 		
-		//Begin in graph view
+		//Begin in options
+		for(ActionListener q : GoToText.getActionListeners()){
+			q.actionPerformed(null);
+		}
 		for(ActionListener q : GoToGraphDisplay.getActionListeners()){
+			q.actionPerformed(null);
+		}
+		for(ActionListener q : GoToOptions.getActionListeners()){
 			q.actionPerformed(null);
 		}
 	}

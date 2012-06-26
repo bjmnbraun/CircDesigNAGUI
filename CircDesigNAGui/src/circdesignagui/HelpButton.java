@@ -139,6 +139,9 @@ public class HelpButton extends JButton implements MouseListener{
 		}
 	}
 	public void mouseClicked(MouseEvent e) {
+		if (mc.modalPanelIsOccupied()){
+			return;
+		}
 		mc.removeAllModalScale();
 		final JPanel openModalDialog = ModalUtils.openModalDialog(mc,f);
 		/*

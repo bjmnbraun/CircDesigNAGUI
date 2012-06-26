@@ -23,6 +23,7 @@ import javax.swing.JPanel;
 
 public interface ModalizableComponent {
 	public JPanel getModalPanel();
+	public boolean modalPanelIsOccupied();
 	public void addModalScale(Runnable runnable);
 	public void removeAllModalScale();
 }

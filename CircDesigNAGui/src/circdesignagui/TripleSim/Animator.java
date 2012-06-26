@@ -13,10 +13,10 @@ import circdesigna.DomainStructureBNFTree.DomainStructure;
 import circdesigna.DomainStructureBNFTree.HairpinStem;
 import circdesigna.DomainStructureBNFTree.ThreePFivePOpenJunc;
 import circdesigna.config.CircDesigNAConfig;
-import circdesignagui.DNAPreviewStrand;
+import circdesignagui.MoleculePreview;
 import circdesignagui.ThemedApplet;
 
-public class Animator extends DNAPreviewStrand{
+public class Animator extends MoleculePreview{
 	public static class Themer extends ThemedApplet{
 		public void addModalScale(Runnable runnable) {
 		}
@@ -24,6 +24,10 @@ public class Animator extends DNAPreviewStrand{
 			return null;
 		}
 		public void removeAllModalScale() {
+		}
+		public boolean modalPanelIsOccupied() {
+			// TODO Auto-generated method stub
+			return false;
 		}
 	}
 	

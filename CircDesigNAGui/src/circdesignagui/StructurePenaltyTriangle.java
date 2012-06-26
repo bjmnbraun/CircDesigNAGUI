@@ -36,6 +36,7 @@ import circdesigna.impl.CircDesigNAImpl.SelfSimilarityScore;
 
 /**
  * Helper applet for FoldingImplTestGui, displays a detailed graphic of a single objective subscore.
+ * @deprecated
  */
 public class StructurePenaltyTriangle extends PApplet{
 	private ThemedApplet mc;
@@ -66,6 +67,8 @@ public class StructurePenaltyTriangle extends PApplet{
 		domain = domain_sequences;
 		domain_markings = nullMarkings;
 		this.sp = sp;
+		throw new RuntimeException();
+		/*
 		if (sp instanceof MFEHybridNonlegalScore || sp instanceof SelfFoldNonlegalScore || sp instanceof SelfSimilarityScore){
 			curSeqs = sp.getSeqs();
 		} else {
@@ -73,6 +76,7 @@ public class StructurePenaltyTriangle extends PApplet{
 		}
 		evalTriangle();
 		redraw();
+		*/
 	}
 	private void evalTriangle() {
 		if (curSeqs!=null){

@@ -266,7 +266,7 @@ public class FoldingImplTestGui extends ThemedApplet{
 				}
 			}
 
-			List<ScorePenalty> listPenalties = ddi.listPenalties(target, dir, domain, CircDesigNAOptions.getDefaultOptions(), dsd);
+			List<ScorePenalty> listPenalties = ddi.listPenalties(target, dir, domain, CircDesigNAOptions.getDefaultOptions(config), dsd);
 			for(ScorePenalty sp : listPenalties){
 				penalties.add(new PenaltyObject(sp, dsd));	
 			}
@@ -304,5 +304,8 @@ public class FoldingImplTestGui extends ThemedApplet{
 		return null;
 	}
 	public void removeAllModalScale() {
+	}
+	public boolean modalPanelIsOccupied() {
+		return false;
 	}
 }

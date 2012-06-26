@@ -20,7 +20,6 @@
 package circdesignagui;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -37,14 +36,16 @@ import circdesigna.SequenceDesigner.AlternativeResult;
 public class DnaDesignOutputPanel extends JPanel{
 	private JTextArea textArea;
 	private SequenceDesigner design;
+	private JScrollPane showText;
 	private boolean setupResults = false;
 	private JComboBox resultSelector;
-
+	private AlternativeResult[] alternativeResults;
+	
 	public DnaDesignOutputPanel(SequenceDesigner design){
 		this.design = design;
 		textArea = new JTextArea("No output. First press \"Begin Designer\", and then press the button again to show an intermediate result.");
 		textArea.setEditable(false);
-		JScrollPane showText = new JScrollPane(textArea);
+		showText = new JScrollPane(textArea);
 		setLayout(new BorderLayout());
 		
 		add(showText, BorderLayout.CENTER);
@@ -52,7 +53,7 @@ public class DnaDesignOutputPanel extends JPanel{
 		resultSelector = new JComboBox();
 		resultSelector.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
-				updateResult();
+				updateSelection();
 			}
 		});
 		resultSelector.setMaximumRowCount(5);
@@ -62,8 +63,7 @@ public class DnaDesignOutputPanel extends JPanel{
 		add(resultSelectorPane,BorderLayout.NORTH);
 	}
 	
-	public void updateResult(){
-		AlternativeResult[] alternativeResults = design.getAlternativeResults();
+	private void updateSelection(){
 		if (!setupResults){
 			if (alternativeResults!=null){
 				resultSelector.removeAllItems();
@@ -79,5 +79,11 @@ public class DnaDesignOutputPanel extends JPanel{
 		} else {
 			textArea.setText(design.getResult());
 		}
+		textArea.setCaretPosition(0); //scroll to top of text
+	}
+
+	public void fetchResults() {
+		alternativeResults = design.getAlternativeResults();
+		updateSelection();
 	}
 }

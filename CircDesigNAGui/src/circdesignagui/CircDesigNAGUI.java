@@ -65,7 +65,7 @@ import circdesigna.config.CircDesigNAConfig;
 import circdesigna.exception.InvalidDNAMoleculeException;
 import circdesigna.exception.InvalidDomainDefsException;
 import circdesigna.impl.CodonCode;
-import circdesignagui.DNAPreviewStrand.UpdateSuccessfulException;
+import circdesignagui.MoleculePreview.UpdateSuccessfulException;
 
 /**
  * Main GUI class. Lays out the applet, but does not handle the window that pops up when a help button is pressed
@@ -213,7 +213,7 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 									}
 								}
 								SavePreviewImage.setEnabled(true);
-								JOptionPane.showMessageDialog(CircDesigNAGUI.this, new JTextArea("File saved to \n"+PreviewSeqs.getLastSnapshotPath()){
+								JOptionPane.showMessageDialog(CircDesigNAGUI.this, new JTextArea("Snapshots saved to \n"+PreviewSeqs.getLastSnapshotPath()){
 									{
 										setEditable(false);
 									}
@@ -251,7 +251,7 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 			}
 			class RnaDnaToggleHandler {
 				void handleToggle(int id){
-					if (modalPanelOpen()){
+					if (modalPanelIsOccupied()){
 						return;
 					}
 					
@@ -288,7 +288,7 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 				{
 					addActionListener(new ActionListener(){
 						public void actionPerformed(ActionEvent e) {
-							if (modalPanelOpen()){
+							if (modalPanelIsOccupied()){
 								return;
 							}
 							
@@ -302,7 +302,7 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 				{
 					addActionListener(new ActionListener(){
 						public void actionPerformed(ActionEvent e) {
-							if (modalPanelOpen()){
+							if (modalPanelIsOccupied()){
 								return;
 							}
 							
@@ -366,7 +366,7 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 					setBorder(BorderFactory.createEmptyBorder(4,4,4,4));
 				}
 			};
-			PreviewSeqs = new DNAPreviewStrand(this, CircDesignConfig){
+			PreviewSeqs = new MoleculePreview(this, CircDesignConfig){
 				public void draw(){
 					super.draw();
 				}
@@ -377,7 +377,6 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 			DomainDefWithHelp.setOpaque(false);
 			DomainDefWithHelp.setLayout(new BorderLayout());
 			DomainDefWithHelp.add(PreviewSeqsProxy, BorderLayout.WEST);
-			String immcond = "Double line";
 			
 			DomainDefWithHelp.add(new HelpButton("Preview Molecule", getHelpFile("Preview Molecule"),
 				this,this), BorderLayout.CENTER);
@@ -450,7 +449,7 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 		
 		return getHelpFile_memo.get(string);
 	}
-	public boolean modalPanelOpen(){
+	public boolean modalPanelIsOccupied(){
 		if (getModalPanel()==null){ return false;}
 		if (getModalPanel().getComponentCount() > 0){
 			return true;
@@ -507,7 +506,7 @@ public class CircDesigNAGUI extends ThemedApplet implements ModalizableComponent
 	private JTextArea DomainDef, Molecules, ErrorsOutText;
 	private String Molecules_CLine="";
 	private int Molecules_CLine_num;
-	private DNAPreviewStrand PreviewSeqs;
+	private MoleculePreview PreviewSeqs;
 	private DesignerVisualGraph PreviewGraph;
 	private JPanel PreviewSeqsProxy;
 	private SequenceDesigner cDesign;
