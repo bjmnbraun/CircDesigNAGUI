@@ -37,6 +37,7 @@ import java.util.TreeMap;
 import processing.core.PApplet;
 import processing.core.PFont;
 import processing.core.PMatrix;
+import circdesigna.CircDesigNAStyle;
 import circdesigna.DomainDefinitions;
 import circdesigna.DomainPolymerGraph;
 import circdesigna.DomainStructureBNFTree;
@@ -45,12 +46,10 @@ import circdesigna.DomainStructureBNFTree.HairpinStem;
 import circdesigna.DomainStructureBNFTree.SingleStranded;
 import circdesigna.DomainStructureBNFTree.ThreePFivePOpenJunc;
 import circdesigna.config.CircDesigNAConfig;
-import circdesigna.energy.ExperimentalDuplexParams.HairpinLoop;
 import circdesigna.exception.InvalidDNAMoleculeException;
 import circdesigna.exception.InvalidDomainDefsException;
 import circdesigna.geometry.CircumscribedPolygonTool;
 import circdesigna.geometry.CircumscribedPolygonTool.CircumscribedPolygon;
-import circdesigna.parser.CDNA2Token.ThreePrimeEnd;
 
 /**
  * An embedded PApplet for displaying molecule previews. A number of keystrokes
@@ -426,7 +425,6 @@ public class MoleculePreview extends PApplet{
 					}
 				} catch (Throwable e){
 					e.printStackTrace();
-					exit();
 				} finally {
 					popMatrix_drawMolecule();
 				}
@@ -539,7 +537,9 @@ public class MoleculePreview extends PApplet{
 				}
 				if (pivot == -1){
 					//Single stranded structure.
-					drawMoleculeSS(0, dpg.length()-1, trueDraw, deform);
+					if (dpg.length()>0){
+						drawMoleculeSS(0, dpg.length()-1, trueDraw, deform);
+					}
 				} else {
 					pushMatrix_drawMolecule();
 					drawMoleculeStem(pivot, trueDraw, deform);
@@ -556,6 +556,8 @@ public class MoleculePreview extends PApplet{
 					if (j != -1){
 						int domainI = dpg.getDomain(i);
 						int domainJ = dpg.getDomain(j);
+						CircDesigNAStyle stylei = dpg.getStyle(i);
+						CircDesigNAStyle stylej = dpg.getStyle(j);
 						int next = (j+1)%N;
 						if (dpg.getDomain(next)==-1){
 							//We have nothing to our right, so give ourselves more berth and just continue on ahead
@@ -566,11 +568,11 @@ public class MoleculePreview extends PApplet{
 						rotate(-HALF_PI);
 						translate(0, -openingSize/2);
 						if (trueDraw){
-							drawBase(eW, domainI);
+							drawBase(eW, stylei);
 						}
 						translate(0, openingSize);
 						if (trueDraw){
-							drawBase(eW, domainJ);
+							drawBase(eW, stylej);
 						}
 						translate(0, -openingSize/2);
 						translate(eW, 0);
@@ -580,6 +582,7 @@ public class MoleculePreview extends PApplet{
 						i = j;
 					} else {
 						int domain = dpg.getDomain(i);
+						CircDesigNAStyle stylei = dpg.getStyle(i);
 						if (domain == -1){
 							int last = (i-1+N)%N;
 							if (dpg.getDomainPair(last)!=-1){
@@ -599,7 +602,7 @@ public class MoleculePreview extends PApplet{
 									popMatrix_drawMolecule();
 								}
 								if (trueDraw){
-									drawBase(eW*2, domain, k);
+									drawBase(eW*2, stylei);
 								}
 								translate(eW*2, 0);
 							}
@@ -612,7 +615,11 @@ public class MoleculePreview extends PApplet{
 			}
 			private void drawMoleculeStem(int i, boolean trueDraw, MolecularDeformation deform) {
 				int domain = dpg.getDomain(i);
-				int domain2 = dpg.getDomain(dpg.getDomainPair(i));
+				int j = dpg.getDomainPair(i);
+				int domain2 = dpg.getDomain(j);
+				CircDesigNAStyle stylei = dpg.getStyle(i);
+				CircDesigNAStyle stylej = dpg.getStyle(j);
+				
 				int seqLen = dsd.getDomainLength(domain);
 				if (seqLen == 0){
 					throw new RuntimeException("Do not call drawMoleculeStem on a zero length stem!");
@@ -634,11 +641,11 @@ public class MoleculePreview extends PApplet{
 					
 				translate(0,-openingSize/2);
 				if(trueDraw){
-					drawBase(eW*2*(seqLen-1),domain);
+					drawBase(eW*2*(seqLen-1),stylei);
 				}
 				translate(0,openingSize);
 				if(trueDraw){
-					drawBase(eW*2*(seqLen-1),domain2);
+					drawBase(eW*2*(seqLen-1),stylej);
 				}
 				translate(0,-openingSize/2);
 					
@@ -663,14 +670,16 @@ public class MoleculePreview extends PApplet{
 				//Finish off the last stem
 				float openingSize = HairpinStem.openingSize*eW*2;
 				int domain = dpg.getDomain(i);
+				CircDesigNAStyle stylei = dpg.getStyle(i);
 				int domain2 = dpg.getDomain(j);
+				CircDesigNAStyle stylej = dpg.getStyle(j);
 				translate(0,-openingSize/2);
 				if(trueDraw){
-					drawBase(eW,domain);
+					drawBase(eW,stylei);
 				}
 				translate(0,openingSize);
 				if(trueDraw){
-					drawBase(eW,domain2);
+					drawBase(eW,stylej);
 				}
 				translate(0,-openingSize/2);
 				translate(eW, 0);
@@ -681,6 +690,7 @@ public class MoleculePreview extends PApplet{
 				int unpairedBasesInLeft = 0;
 				int unpairedBasesInRight = 0;
 				float circumOnRight = 0;
+				boolean hasAdjacentStems = false;
 				int N = dpg.length();
 				ArrayList<Float> loopElements = new ArrayList();
 				loopElements.add(HairpinStem.openingSize*2*eW);
@@ -704,15 +714,25 @@ public class MoleculePreview extends PApplet{
 								circumOnRight += domainLen * 2 * eW;
 							}
 						} else {
-							k = pairk;
+							int last = (k-1+N)%N;
+							if (last != i){
+								if (dpg.getDomainPair(last) != -1){
+									//Two stems in a row on the interior of this loop - can't draw these using drawMoleculeSS.
+									hasAdjacentStems = true;
+								}
+							}
+							
 							loopElements.add(HairpinStem.openingSize*2*eW);
 							if (threePrimeEnds == 0){
 							} else {
 								circumOnRight += HairpinStem.openingSize*2*eW;
 							}
+							k = pairk;
 						}
 					}
 				}
+				
+				boolean isAwkwardSS = hasAdjacentStems && (unpairedBasesInLeft + unpairedBasesInRight > 0);
 				
 				if (threePrimeEnds > 0){
 					boolean leftBeginsWithSS = true;
@@ -803,7 +823,7 @@ public class MoleculePreview extends PApplet{
 						}
 					}
 					
-					if (leftIs3pEnd && rightBeginsWithSS){
+					if (leftIs3pEnd && rightBeginsWithSS && !isAwkwardSS){
 						//draw left straight out, right at 45 degrees
 						translate(0, -openingSize / 2);
 						if (trueDraw){
@@ -818,17 +838,17 @@ public class MoleculePreview extends PApplet{
 						}
 						return;
 					}
-					if (leftBeginsWithStem && rightBeginsWithSS && (rightIsEmpty || leftAfterStemIsEmpty)){
+					if (leftBeginsWithStem && rightBeginsWithSS && !isAwkwardSS && (rightIsEmpty || leftAfterStemIsEmpty)){
 						pushMatrix_drawMolecule();
 						translate(eW, 0);
 						int d = (i+1)%N;
-						int dDomain = dpg.getDomain(d);
+						CircDesigNAStyle styled = dpg.getStyle(d);
 						drawMoleculeStem(d, trueDraw, deform);
 						popMatrix_drawMolecule();
 						pushMatrix_drawMolecule();
 						translate(0, -openingSize/2);
 						if (trueDraw){
-							drawBase(eW, dDomain);
+							drawBase(eW, styled);
 						}
 						translate(0, openingSize);
 						translate(eW, 0);
@@ -857,11 +877,12 @@ public class MoleculePreview extends PApplet{
 						}
 						return;
 					}
-					if (rightIsStemAndSS && leftBeginsWithSS && (leftIsEmpty || rightAfterStemIsEmpty)){
+					if (rightIsStemAndSS && leftBeginsWithSS && !isAwkwardSS && (leftIsEmpty || rightAfterStemIsEmpty)){
 						//draw the stem straight out, the subsequent single stranded is angled at 45 degrees, coming back in this direction
 						int e = (j-1+N)%N;
 						int d = dpg.getDomainPair(e);
-						int eDomain = dpg.getDomain(e);
+						CircDesigNAStyle stylee = dpg.getStyle(e);
+						
 						pushMatrix_drawMolecule();
 						translate(eW, 0);
 						drawMoleculeStem(d, trueDraw, deform);
@@ -869,7 +890,7 @@ public class MoleculePreview extends PApplet{
 						pushMatrix_drawMolecule();
 						translate(0, openingSize/2);
 						if (trueDraw){
-							drawBase(eW, eDomain);
+							drawBase(eW, stylee);
 						}
 						translate(0, -openingSize);
 						translate(eW, 0);
@@ -986,6 +1007,7 @@ public class MoleculePreview extends PApplet{
 								noFill();
 								ellipseMode(CENTER);
 								noFill();
+								drawBase(0, dpg.getStyle(k));
 								arc(0, 0, 2*radius, 2*radius, 0, arc);
 							}
 						} else {
@@ -993,14 +1015,16 @@ public class MoleculePreview extends PApplet{
 							rotate(arc/2);
 							translate(radius-hairpinOpeningAdjust, 0);
 							int domainK = dpg.getDomain(k);
+							CircDesigNAStyle stylek = dpg.getStyle(k);
 							int domainKPair = dpg.getDomain(dpg.getDomainPair(k));
+							CircDesigNAStyle stylekpair = dpg.getStyle(dpg.getDomainPair(k));
 							translate(0, -openingSize/2);
 							if (trueDraw){
-								drawBase(eW, domainK);
+								drawBase(eW, stylek);
 							}
 							translate(0, openingSize);
 							if (trueDraw){
-								drawBase(eW, domainKPair);
+								drawBase(eW, stylekpair);
 							}
 							translate(0, -openingSize/2);
 							translate(eW, 0);
@@ -1012,236 +1036,27 @@ public class MoleculePreview extends PApplet{
 					rotate(arc);
 				}
 			}
-			private void drawStructure(DomainStructure ds, boolean trueDraw, CircumscribedPolygon cp, int shaftLength, boolean allowWiggle, MolecularDeformation deform){
-				float wiggleTheta = PI/4; 
-				if (dynamicWiggle && allowWiggle){
-					wiggleTheta += sin(frameCount/120f*(1+ds.random0*.3f)+ds.random0*TWO_PI)*.3f;
-				}
-				
-				if (ds instanceof ThreePFivePOpenJunc){
-					stroke(0);
-					if (trueDraw){	
-						draw3PEnd();
-					}
-					drawDomainLabel("",eW/2, trueDraw, deform);
-				}
-				
-				if (ds instanceof ThreePFivePOpenJunc){
-					translate(eW*2*((ThreePFivePOpenJunc)ds).size, 0);
-					if (cp!=null) rotate(cp.next());
-				}
-				
-				if (ds instanceof SingleStranded){
-					if (cp==null){ //Outer loop
-						rotate(wiggleTheta);
-					}
-					for(int p : ds.sequencePartsInvolved){
-						int domain = dsg.domains[p];
-						int seqLen = dsd.domainLengths[domain & NA_COMPLEMENT_FLAGINV];
-						for(int k = 0; k < seqLen; k++){
-							if (k == (seqLen-1) / 2){
-								pushMatrix_drawMolecule();
-								try {
-									translate(seqLen%2==0?eW:0,0);
-									drawDomainLabel(dsd.getDomainName(domain),seqLen/2f*eW,trueDraw, deform);
-								} finally {
-									popMatrix_drawMolecule();
-								}
-							}
-							if (trueDraw){
-								drawBase(eW,domain,k);
-							}
-							translate(eW*2, 0);
-							if (cp!=null){
-								rotate(cp.next());	
-							} else {
-								if (deform!=null) deform.run(1);
-							}
-						}
-					}
-					//END OF METHOD
-				} else if (ds instanceof HairpinStem){
-					HairpinStem hs = (HairpinStem)ds;
-					float openingSize = hs.openingSize*eW*2;
-					if (shaftLength == 0){
-						if (cp != null){
-							pushMatrix_drawMolecule();
-							translate(openingSize/2,0); //Size of opening.
-							rotate(-HALF_PI);
-							drawStem(hs, shaftLength, trueDraw, cp, deform);
-							popMatrix_drawMolecule();
-							float deltaTheta = 0;
-							if (cp!=null) deltaTheta = cp.next();
-							translate(openingSize,0);
-							rotate(deltaTheta);
-						} else {
-							pushMatrix_drawMolecule();
-							drawStem(hs, shaftLength, trueDraw, cp, deform);
-							popMatrix_drawMolecule();
-						}
-					} else {
-						drawStem(hs, shaftLength, trueDraw, cp, deform);
-					}
-				}
-			}
-			private void drawStem(HairpinStem hs, int shaftLength, boolean trueDraw, CircumscribedPolygon cp, MolecularDeformation deform) {
-				float openingSize = hs.openingSize*eW*2;
-				
-				//Draw the shaft.
-				int domain = dsg.domains[hs.sequencePartsInvolved[0]];
-				int domain2 = dsg.domains[hs.sequencePartsInvolved[1]];
-				
-				//They better be the same lengths...
-				int seqLen = dsd.domainLengths[domain & NA_COMPLEMENT_FLAGINV];
-				
-				if (seqLen > 0){
-					if (longestHairpin < shaftLength + seqLen){
-						if (deform.isNullTransform() && rotateToLongestHairpin){
-							longestHairpin_counterrotation = getCounterRotation();
-						}
-						longestHairpin = shaftLength + seqLen;
-					}
-				}
-				
-				for(int k = 0; k < seqLen; k++){
-					if (k == (seqLen - 1) / 2){
-						pushMatrix_drawMolecule();
-						try {
-							translate(seqLen%2==0?eW:0,0);
-							translate(0,-openingSize/2);
-							drawDomainLabel(dsd.getDomainName(domain),seqLen/2f*eW,trueDraw, deform);
-							translate(0,openingSize);
-							translate(eW*2,0);
-							rotate(PI);
-							drawDomainLabel(dsd.getDomainName(domain2),seqLen/2f*eW,trueDraw, deform);
-						} finally {
-							popMatrix_drawMolecule();
-						}
-					}
-					if (trueDraw){
-						translate(0,-openingSize/2);
-						deform.run(1);
-						drawBase(eW,domain,k);
-						deform.run(-1);
-						translate(0,openingSize);
-						deform.run(1);
-						drawBase(eW,domain2,seqLen-1-k);
-						deform.run(-1);
-						translate(0,-openingSize/2);
-						
-						//hydrogen bonding
-						//stroke(lerpColor(color(100,100,100),color(255,255,255),1-hs.hydrogenBondStrength));
-						stroke(0);
-						fill(0);
-						deform.run(1);
-						pushMatrix_drawMolecule();
-						translate(eW,0);
-						ellipseMode(CENTER);
-						ellipse(0, 0, eW*2, eW*2);
-						popMatrix_drawMolecule();
-						deform.run(-1);
-						//Back to backbone color.
-						stroke(0);
-					}
-					deform.run(1);
-					translate(eW*2, 0);
-				}
-				
-				//Stem has been drawn.
-				if (hs.innerCurve!=null){
-					boolean displayBrokenLoop = (hs.leftRightBreak==0 || hs.leftRightBreak==hs.subStructure.size()-1) 
-					&& !(hs.subStructure.get(0) instanceof HairpinStem || hs.subStructure.get(hs.subStructure.size()-1) instanceof HairpinStem);
-					
-					if (!displayBrokenLoop){
-						//Loop!
-						translate(0,-openingSize/2);
-						hs.innerCurve.resetCounter();
-						float openingTheta = -HALF_PI+hs.innerCurve.next();
-						pushMatrix_drawMolecule();
-						rotate(openingTheta);
-						//Recurse through closed loop
-						for(int k = 0; k < hs.subStructure.size(); k++){
-							DomainStructure domainStructure = hs.subStructure.get(k);
-							drawStructure(domainStructure,trueDraw,hs.innerCurve, 0, true, deform);	
-						}
-						popMatrix_drawMolecule();
-					} else {
-						//Broken loop. Render the left, then the right (stack)
-						translate(0,-openingSize/2);
-						pushMatrix_drawMolecule();
-						rotate(HALF_PI);
-						//The left hand side can curve.
-						for(int k = 0; k <= hs.leftRightBreak; k++){
-							DomainStructure domainStructure = hs.subStructure.get(k);
-							//if(!(domainStructure instanceof HairpinStem)){
-							//	lastWasSS2 = true;
-							//}
-							drawStructure(domainStructure,trueDraw,null, 0, true, deform);
-						}
-						popMatrix_drawMolecule();
-						
-						pushMatrix_drawMolecule();
-						{
-							//Recurse through right
-							rotate(PI);
-							translate(openingSize,0);
-							//rotate(-HairpinOpenAngle);
-							rotate(-HALF_PI);
-							float rightLoopSize = 0;
-							for(boolean getLengthPass : new boolean[]{true,false}){
-								List<Float> holder = new ArrayList();
-								for(int k = hs.leftRightBreak+1; k < hs.subStructure.size(); k++){
-									DomainStructure domainStructure = hs.subStructure.get(k);
-									if (getLengthPass){
-										DomainStructure.getOuterLevelSpace(holder, domainStructure, dsd.domainLengths, dsg.domains);
-									} else {
-										//Use "lastwasSS" to get it oriented the right way on the way back
-										//Can't allow wiggling, unfortunately.
-										drawStructure(domainStructure,trueDraw,null, 0, false, deform);
-									}
-								}
-								if (getLengthPass){
-									rightLoopSize = 0;
-									for(Float k : holder){
-										rightLoopSize += k;
-									}
-									//Ok. Translate us WAY out there, and then come back.
-									translate(eW*2*rightLoopSize,0);
-									rotate(PI);
-								}
-							}
-						}
-						popMatrix_drawMolecule();
-					}
-				} else {
-					//Recurse up shaft
-					for(int k = 0; k < hs.subStructure.size(); k++){
-						DomainStructure domainStructure = hs.subStructure.get(k);
-						drawStructure(domainStructure,trueDraw,null, shaftLength + seqLen, true, deform);	
-					}
-				}
-				//END OF METHOD
-			}
 			private void draw3PEnd() {
 				fill(0);
 				line(0,0,-eW*2,-eW*2);
 			}
-			private void drawBase(float len, int domain) {
+			private void drawBase(float len, CircDesigNAStyle style) {
 				if (drawDomainNameOnLine){
 					return;
 				}
-				//TODO: lookup domain color!
-				line(0,0,len,0);
+				stroke(style.color.getRed(), style.color.getGreen(), style.color.getBlue());
+				//TODO: bold etcetera
+				if (len > 0){
+					line(0,0,len,0);
+				}
 			}
+			/*
 			private void drawBase(float len, int domain, int k) {
 				if (drawDomainNameOnLine){
 					return;
 				}
 				
 				boolean isComp = (domain & NA_COMPLEMENT_FLAG)!=0;
-				/**
-				 * Note: constraints 
-				 */
 				char constraint = '-';
 				
 				constraint = dsd.getConstraint(domain).charAt(isComp?dsd.domainLengths[domain&NA_COMPLEMENT_FLAGINV]-1-k:k);
@@ -1273,20 +1088,9 @@ public class MoleculePreview extends PApplet{
 				} else {
 					line(0,0,len,0);
 				}
-					/*
-				} else {
-					stroke(0);
-					line(0,0,eW*2,0);
-					if (Character.isLowerCase(constraint)){
-						stroke(sCol);
-					} else {
-						noStroke();
-					}
-					ellipseMode(CORNERS);
-					ellipse(eW-eW*.9f,-eW*.9f,eW*2*.9f,eW*2*.9f);
-				}
-				*/
 			}
+			*/
+		
 			public boolean dynamicWiggle = true; private long dynamicWiggle_clock = System.nanoTime();
 			public boolean drawLineStructure = false;
 			public boolean drawDomainNameOnLine = false; //Don't draw lines to represent bases, and draw the domain name in-line
