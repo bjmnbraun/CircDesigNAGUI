@@ -24,6 +24,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.Box;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -31,7 +32,6 @@ import javax.swing.JTextArea;
 
 import circdesigna.SequenceDesigner;
 import circdesigna.SequenceDesigner.AlternativeResult;
-
 
 public class DnaDesignOutputPanel extends JPanel{
 	private JTextArea textArea;
@@ -43,7 +43,7 @@ public class DnaDesignOutputPanel extends JPanel{
 	
 	public DnaDesignOutputPanel(SequenceDesigner design){
 		this.design = design;
-		textArea = new JTextArea("No output. First press \"Begin Designer\", and then press the button again to show an intermediate result.");
+		textArea = new JTextArea("No output. Press \"Get Results\" to show an intermediate result.");
 		textArea.setEditable(false);
 		showText = new JScrollPane(textArea);
 		setLayout(new BorderLayout());
@@ -57,7 +57,16 @@ public class DnaDesignOutputPanel extends JPanel{
 			}
 		});
 		resultSelector.setMaximumRowCount(5);
+		
+		JButton updateResultsButton = new JButton("Get results");
+		updateResultsButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				fetchResults();
+			}
+		});
+		
 		Box resultSelectorPane = Box.createHorizontalBox();
+		resultSelectorPane.add(updateResultsButton);
 		resultSelectorPane.add(Box.createHorizontalGlue());
 		resultSelectorPane.add(resultSelector);
 		add(resultSelectorPane,BorderLayout.NORTH);
@@ -83,7 +92,11 @@ public class DnaDesignOutputPanel extends JPanel{
 	}
 
 	public void fetchResults() {
-		alternativeResults = design.getAlternativeResults();
-		updateSelection();
+		AlternativeResult[] alternativeResults = design.getAlternativeResults();
+		if (this.alternativeResults!=alternativeResults){
+			//Changed? Update the text.
+			this.alternativeResults = alternativeResults;
+			updateSelection();
+		}
 	}
 }

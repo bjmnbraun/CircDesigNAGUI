@@ -33,7 +33,7 @@ import javax.swing.JTextArea;
  * Utility GUI for modifying the codon table.
  */
 public class ModifyCodonTablePanel {
-	public ModifyCodonTablePanel(final CircDesigNAGUI mc, Font monoSpaceFont) {
+	public ModifyCodonTablePanel(final CircDesigNA_DesignView mc, Font monoSpaceFont) {
 		final JPanel openModalDialog = ModalUtils.openModalDialog(mc,monoSpaceFont, new Runnable(){
 			public void run() {
 				//Closing action

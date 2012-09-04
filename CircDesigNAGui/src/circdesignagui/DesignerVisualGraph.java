@@ -42,15 +42,6 @@ import processing.core.PFont;
  */
 public class DesignerVisualGraph extends PApplet{
 	private SequenceDesigner design;
-	public void setVisible(boolean b){
-		if (b && !start){
-			init();
-			start();	
-			start = true;
-		}
-		super.setVisible(b);
-	}
-	private boolean start = false;
 	public void setup(){
 		int w = getPreferredSize().width, h = getPreferredSize().height;
 		size(w,h,P3D);

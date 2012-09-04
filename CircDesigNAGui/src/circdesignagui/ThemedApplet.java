@@ -38,11 +38,11 @@ import javax.swing.border.TitledBorder;
 public abstract class ThemedApplet extends Applet implements ModalizableComponent{
 	public Color THEMECOL0 = Color.black,THEMECOL1 = Color.black,THEMECOL2 = Color.black,THEMECOL3 = Color.black,THEMECOL4 = Color.black;
 	public void parseThemeColors(){
-		THEMECOL0 = parseColorFromParam("themecol0");
-		THEMECOL1 = parseColorFromParam("themecol1");
-		THEMECOL2 = parseColorFromParam("themecol2");
-		THEMECOL3 = parseColorFromParam("themecol3");
-		THEMECOL4 = parseColorFromParam("themecol4");
+		THEMECOL0 = parseColorFromParam("themecol0", Color.decode("#FFF7BC"));
+		THEMECOL1 = parseColorFromParam("themecol1", Color.decode("#FEC44F"));
+		THEMECOL2 = parseColorFromParam("themecol2", Color.decode("#D95F0E"));
+		THEMECOL3 = parseColorFromParam("themecol3", Color.decode("#ED303C"));
+		THEMECOL4 = parseColorFromParam("themecol4", Color.decode("#3B8183"));
 	}
 
 	public JPanel skinPanel(JPanel panel) {
@@ -60,7 +60,6 @@ public abstract class ThemedApplet extends Applet implements ModalizableComponen
 		        int width = getWidth();
 		        int height = getHeight();
 
-		        
 				((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, // Anti-alias!
 				        RenderingHints.VALUE_ANTIALIAS_ON);
 		        // Paint a rounded rectangle in the background.
@@ -81,16 +80,16 @@ public abstract class ThemedApplet extends Applet implements ModalizableComponen
 		return inner2;
 	}
 
-	private Color parseColorFromParam(String string) {
+	private Color parseColorFromParam(String string, Color def) {
 		try {
 			string = getParameter(string);
+			if (string == null){
+				return def;
+			}
+			return Color.decode(string);
 		} catch (Throwable e){
-			//e.printStackTrace();
-			return Color.black;
+			e.printStackTrace();
+			return def;
 		}
-		if (string==null){
-			return Color.black;
-		}
-		return Color.decode(string);
 	}
 }

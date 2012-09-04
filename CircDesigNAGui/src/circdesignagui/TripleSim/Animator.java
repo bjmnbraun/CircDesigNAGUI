@@ -75,8 +75,8 @@ public class Animator extends MoleculePreview{
 			
 			int phase = (int)(progress() * N * (N+1)/((float)N));
 			
-			ddef.domainLengths[ddef.lookupDomainName(increase)] = phase;
-			ddef.domainLengths[ddef.lookupDomainName(reduce)] = N - phase;
+			ddef.domainLengths[ddef.getDomainFromName(increase)] = phase;
+			ddef.domainLengths[ddef.getDomainFromName(reduce)] = N - phase;
 
 			for(DomainStructure s : dsg.listStructures()){
 				s.handleSubConformation(ddef.domainLengths, dsg.domains);

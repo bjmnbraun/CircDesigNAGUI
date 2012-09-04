@@ -46,7 +46,7 @@ public class DomainBNFToDotParens {
 							}
 				}
 				//System.out.println(namePart);
-				final Integer i = dsd.lookupDomainName(namePart.toString());
+				final Integer i = dsd.getDomainFromName(namePart.toString());
 				//System.out.println(i);
 				int num = dsd.domainLengths[i];
 				for(int k = 0; k < num; k++){
