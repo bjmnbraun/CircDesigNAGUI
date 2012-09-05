@@ -99,4 +99,11 @@ public class DnaDesignOutputPanel extends JPanel{
 			updateSelection();
 		}
 	}
+
+	public AlternativeResult getBestChild() {
+		if (alternativeResults == null){
+			return null;
+		}
+		return alternativeResults[AlternativeResult.BEST];
+	}
 }
