@@ -78,15 +78,20 @@ public class TripleSimTest {
 
 		long nanoTime = System.nanoTime();
 		int unproductiveIterations = 0;
+		
+		boolean verbose = false;
+		
 		big: while(!g.unvisited.isEmpty()){
 			{
 				GraphNode A = g.unvisited.peek();
 				if (A.priority < IgnorePriority){
 					long now = System.nanoTime();
-					System.out.print("Update took ");
+					if (verbose)
+						System.out.print("Update took ");
 					double simulatedTime = simulator.updatePriorities(g,simulationAccuracy,MachineRuntime,null,IgnorePriority);
 					double UpdateTime = (System.nanoTime()-now)/1e9;
-					System.out.println(UpdateTime+" seconds. System size: "+g.size()+". Simulated up to time: "+simulatedTime);
+					if (verbose)
+						System.out.println(UpdateTime+" seconds. System size: "+g.size()+". Simulated up to time: "+simulatedTime);
 					//simulator.printLastConcentrations(g);
 					if (UpdateTime > 60){
 						dumpGraph(baseXML,g);
@@ -120,7 +125,8 @@ public class TripleSimTest {
 				throw new RuntimeException("Visiting node twice.");
 			}
 			//Visiting a species triggers output.
-			System.out.println(A.index+" "+A);
+			if (verbose)
+				System.out.println(A.index+" "+A);
 			//A is MONOMOLECULAR
 			g.visit(A);
 			//Intramolecular stuff
@@ -132,7 +138,7 @@ public class TripleSimTest {
 				//Intermolecular (bimolecular): Register attachments only when both nodes have been visited
 				for(GraphNode B : g.allVisited){
 					if (B.stable){
-						if (A.structure.getStrandRotations().size() + B.structure.getStrandRotations().size() <= 5){
+						if (A.structure.getStrandRotations().size() + B.structure.getStrandRotations().size() <= 15){
 							attachment.attach(g,g.getDocking(A,B));
 						}
 					}
@@ -143,6 +149,10 @@ public class TripleSimTest {
 			//if (System.nanoTime()-nanoTime > 10e9){
 			//	break;
 			//}
+			
+			if (g.size() > 200){
+				break;
+			}
 		}
 
 		System.out.printf("Size of reaction graph: %d nodes and %d (one-way) reactions",g.size(),g.countOneWayReactions());

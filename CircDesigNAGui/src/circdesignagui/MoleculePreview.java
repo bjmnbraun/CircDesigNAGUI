@@ -20,7 +20,6 @@
 package circdesignagui;
 
 
-import static circdesigna.GSFR.NA_COMPLEMENT_FLAG;
 import static circdesigna.GSFR.NA_COMPLEMENT_FLAGINV;
 
 import java.awt.event.MouseEvent;
@@ -30,8 +29,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.TreeMap;
 
 import processing.core.PApplet;
@@ -41,9 +40,7 @@ import circdesigna.CircDesigNAStyle;
 import circdesigna.DomainDefinitions;
 import circdesigna.DomainPolymerGraph;
 import circdesigna.DomainStructureBNFTree;
-import circdesigna.DomainStructureBNFTree.DomainStructure;
 import circdesigna.DomainStructureBNFTree.HairpinStem;
-import circdesigna.DomainStructureBNFTree.SingleStranded;
 import circdesigna.DomainStructureBNFTree.ThreePFivePOpenJunc;
 import circdesigna.config.CircDesigNAConfig;
 import circdesigna.exception.InvalidDNAMoleculeException;
@@ -69,6 +66,9 @@ public class MoleculePreview extends PApplet{
 	private ScaleFactors<float[]> moleculeScales = new ScaleFactors<float[]>();
 	private Object makeMolecularScale(){
 		return new float[]{-1,-1};
+	}
+	public CircDesigNAConfig getConfig() {
+		return config;
 	}
 	private void invalidateMoleculeScale(Object entrygeneric) {
 		float[] object = (float[])(entrygeneric);
@@ -118,7 +118,7 @@ public class MoleculePreview extends PApplet{
 	 * With a name, so valid input looks like "Name [3*.|2*.|1*.}"
 	 * @param molecules_CLine_num 
 	 */
-	public void setCurrentPreviewMolecule(int molecules_CLine_num, int numMolecules, String moleculeDescription, String domainDefs){
+	public void setCurrentPreviewMolecule(int molecules_CLine_num, int numMolecules, String moleculeDescription, String domainDefs, boolean harsh){
 		needsCurrentMoleculeUpdate = (
 				!currentMoleculeString.equals(moleculeDescription) ||
 				!domainDefsBlock.equals(domainDefs));
@@ -130,14 +130,14 @@ public class MoleculePreview extends PApplet{
 		moleculeScales.setCurrentEntryAndInvalidate(molecules_CLine_num);
 		moleculeScales.invalidateAbove(numMolecules);
 		domainDefsBlock = domainDefs;
-		screen1.preview.updateMolecule();
+		screen1.preview.updateMolecule(harsh);
 	}
-	public void snapShot(String snapshotPath){
+	public void snapShot(String snapshotDir){
 		needsSnapshot = true;
-		this.snapshotPath = snapshotPath;
+		this.snapshotDir = snapshotDir;
 	}
 	public void snapShot(){
-		snapShot(snapshotPath);
+		snapShot(snapshotDir);
 	}
 	public String getLastSnapshotPath() {
 		return snapshotPath;
@@ -174,7 +174,7 @@ public class MoleculePreview extends PApplet{
 	private String currentMoleculeString = "";
 	private String domainDefsBlock = "";
 	private boolean needsCurrentMoleculeUpdate = true, needsSnapshot = false;
-	private String snapshotPath = null;
+	private String snapshotDir = null, snapshotPath = null;
 	public DnaDesignScreens$0_Screen screen1;
 	public DnaDesignScreens$0_Screen.DnaSequencePreview getRenderer(){
 		return screen1.preview;
@@ -189,12 +189,12 @@ public class MoleculePreview extends PApplet{
 				registerDraw(this);
 				registerMouseEvent(this);
 				preview = new DnaSequencePreview();
-				ff = createFont("Arial", 24);
+				ff = createFont("Arial", 16);
 			}
 			private PFont ff;
 			private float moleculeScale = 1f, moleculeScaleMax = 1f, moleculeScale_override = -1;
 			public class DnaSequencePreview {
-				public void updateMolecule(){
+				public void updateMolecule(boolean harsh){
 					if (needsCurrentMoleculeUpdate){
 						try {
 							stopTheWorld[0] = 1;
@@ -208,14 +208,7 @@ public class MoleculePreview extends PApplet{
 							} catch (Throwable e){
 								throw new InvalidDomainDefsException(e.getMessage());
 							}
-							try {
-								DomainStructureBNFTree.readStructure(currentMoleculeString, dsg);
-								DomainPolymerGraph.readStructure(currentMoleculeString, dpg);
-							} catch (Throwable e){
-								//e.printStackTrace();
-								//dsg.structures = null;
-								throw new InvalidDNAMoleculeException(e.getMessage(),0);
-							}
+							parseMolecule();
 							//How many particles?
 							/*
 						moleculeNumSubStructures = 0;
@@ -224,18 +217,39 @@ public class MoleculePreview extends PApplet{
 						}
 						moleculeNumSubStructures*=3;
 							 */
-							hasInitialParticleConfiguration = false;
-							Arrays.fill(previewAreaDrag,0);
+							if (harsh){
+								hasInitialParticleConfiguration = false;
+								Arrays.fill(previewAreaDrag,0);
+								moleculeScale = 1f;
+								moleculeScaleMax = 1f;
+							}
 							needsCurrentMoleculeUpdate = false;
-							moleculeScale = 1f;
-							moleculeScaleMax = 1f;
 						} finally {
 							stopTheWorld[0] = 0;
 						}
 						throw new UpdateSuccessfulException();
 					}
 				}
+				public void parseMolecule() {
+					int oldWorld = stopTheWorld[0];
+					if (oldWorld == 0){
+						stopTheWorld[0] = 1;
+					}
+					try {
+						DomainStructureBNFTree.readStructure(currentMoleculeString, dsg);
+						DomainPolymerGraph.readStructure(currentMoleculeString, dpg);
+					} catch (Throwable e){
+						//e.printStackTrace();
+						//dsg.structures = null;
+						throw new InvalidDNAMoleculeException(e.getMessage(),0);
+					} finally {
+						if (oldWorld == 0){
+							stopTheWorld[0] = 0;
+						}
+					}
+				}
 				private DomainDefinitions dsd = new DomainDefinitions(config);
+				private HashMap<Integer, float[]> connectorMap = new HashMap(); //For drawing pseudoknotted structures.
 				public DomainStructureBNFTree dsg = new DomainStructureBNFTree(dsd);
 				public DomainPolymerGraph dpg = new DomainPolymerGraph(dsd);
 				private float[] renderPolymerGraph_LengthCache = null; //For storing partial indexes of domains
@@ -269,7 +283,7 @@ public class MoleculePreview extends PApplet{
 
 									drawDomainNameOnLine = !drawDomainNameOnLine;
 									if (drawDomainNameOnLine){
-										showDomainNames = true;
+										drawDomainNames = true;
 									}
 								}
 							}
@@ -277,14 +291,14 @@ public class MoleculePreview extends PApplet{
 								if (System.nanoTime()-keyPressedClock>INPUT_CLOCK_INT){
 									keyPressedClock = System.nanoTime();
 
-									drawLineStructure = !drawLineStructure;
+									drawDomainPositionsAsLabels = !drawDomainPositionsAsLabels;
 								}
 							}	
 							if (keyEvent.getKeyChar() == 'a'){
 								if (System.nanoTime()-keyPressedClock>INPUT_CLOCK_INT){
 									keyPressedClock = System.nanoTime();
 
-									showDomainNames = !showDomainNames;
+									drawDomainNames = !drawDomainNames;
 								}
 							}
 							if (keyEvent.getKeyChar() == 'w'){
@@ -301,6 +315,15 @@ public class MoleculePreview extends PApplet{
 									keyPressedClock = System.nanoTime();
 
 									drawPolymerGraph = !drawPolymerGraph;
+									//Invalidate:
+									hasInitialParticleConfiguration = false;
+								}
+							}
+							if (keyEvent.getKeyChar() == 'd'){
+								if (System.nanoTime()-keyPressedClock>INPUT_CLOCK_INT){
+									keyPressedClock = System.nanoTime();
+
+									drawDomainPositionsAsLabels = !drawDomainPositionsAsLabels;
 									//Invalidate:
 									hasInitialParticleConfiguration = false;
 								}
@@ -331,14 +354,18 @@ public class MoleculePreview extends PApplet{
 						longestHairpin = -1;
 						longestHairpin_counterrotation = new float[]{0,1}; //Stays 0 unless a helix is found.
 						drawForeground(false);
-						Arrays.fill(averagePositions,0);
-						//compute averages, rotation.
-						for(int k = 0; k < particlepoints; k++){
-							averagePositions[0] += particlepositions[k][0];
-							averagePositions[1] += particlepositions[k][1];
+						if (!hasInitialParticleConfiguration){
+							Arrays.fill(averagePositions,0);
+							//compute averages, rotation.
+							for(int k = 0; k < particlepoints; k++){
+								averagePositions[0] += particlepositions[k][0];
+								averagePositions[1] += particlepositions[k][1];
+							}
+							averagePositions[0] /= particlepoints;
+							averagePositions[1] /= particlepoints;
 						}
-						float avgx = averagePositions[0] / particlepoints;
-						float avgy = averagePositions[1] / particlepoints;
+						float avgx = averagePositions[0];
+						float avgy = averagePositions[1];
 						float[] q = new float[4];
 						float maxX = 0;
 						float maxY = 0;
@@ -520,7 +547,7 @@ public class MoleculePreview extends PApplet{
 									line(0,-eW,0,0);
 								}
 								if (k == (int)((numBases - 1) / 2)){
-									drawDomainLabel(dsd.getDomainName(id),0,actuallyDraw, null);
+									drawDomainLabel(i, dsd.getDomainName(id),0,actuallyDraw, null);
 								}
 								popMatrix_drawMolecule();
 							}	
@@ -557,8 +584,8 @@ public class MoleculePreview extends PApplet{
 					float openingSize = HairpinStem.openingSize*eW*2;
 					boolean lastWasHelix = false;
 					for(int i = iBegin; ; i=(i+1)%N){
-						int j = dpg.getDomainPair(i);
-						if (j != -1){
+						if (dpg.getDomainPair(i) != -1){
+							int j = dpg.getDomainPair(i);
 							int domainI = dpg.getDomain(i);
 							int domainJ = dpg.getDomain(j);
 							CircDesigNAStyle stylei = dpg.getStyle(i);
@@ -588,12 +615,13 @@ public class MoleculePreview extends PApplet{
 							}
 							translate(0, -openingSize/2);
 							translate(eW, 0);
-							drawMoleculeStem(i, trueDraw, deform);
+							drawMoleculeStem(i, trueDraw, deform); //draw stem
 							popMatrix_drawMolecule();
 							translate(openingSize, 0);
 							i = j;
 							lastWasHelix = true;
 						} else {
+							//unpaired single stranded straight
 							int domain = dpg.getDomain(i);
 							CircDesigNAStyle stylei = dpg.getStyle(i);
 							if (trueDraw){
@@ -609,12 +637,17 @@ public class MoleculePreview extends PApplet{
 									draw3PEnd();
 								}
 							} else {
+								//At the start, too, if conNumber is maximal
+								if (stylei.conNumber == Integer.MAX_VALUE){
+									handleConnector(i, trueDraw, deform);
+								}
+								
 								int seqLen = dsd.getDomainLength(domain);
 								for(int k = 0; k < seqLen; k++){
-									if (k == seqLen / 2){
+									if (k == seqLen / 2 && stylei.conNumber == 0){ //Don't draw domain labels for connectors
 										pushMatrix_drawMolecule();
 										translate(seqLen%2==1?eW:0,0);
-										drawDomainLabel(dsd.getDomainName(domain),(seqLen+1)/2f*eW*2, trueDraw, deform);
+										drawDomainLabel(i, dsd.getDomainName(domain),(seqLen+1)/2f*eW*2, trueDraw, deform);
 										popMatrix_drawMolecule();
 									}
 									if (trueDraw){
@@ -622,6 +655,8 @@ public class MoleculePreview extends PApplet{
 									}
 									translate(eW*2, 0);
 								}
+								//At the end of the 
+								handleConnector(i, trueDraw, deform);
 							}
 							lastWasHelix = false;
 						}
@@ -630,44 +665,96 @@ public class MoleculePreview extends PApplet{
 						}
 					}
 				}
-				private void drawMoleculeStem(int i, boolean trueDraw, MolecularDeformation deform) {
+				private void handleConnector(int i, boolean trueDraw, MolecularDeformation deform) {
 					int domain = dpg.getDomain(i);
-					int j = dpg.getDomainPair(i);
-					int domain2 = dpg.getDomain(j);
 					CircDesigNAStyle stylei = dpg.getStyle(i);
-					CircDesigNAStyle stylej = dpg.getStyle(j);
+					int seqLen = dsd.getDomainLength(domain);
+					if (stylei.conNumber > 0 && seqLen > 1){ //the seqLen>1 thing is weird.
+						if (connectorMap.containsKey(stylei.conNumber)){
+							pushMatrix_drawMolecule();
+							//The second should connect at the bottom, so translate our position up halfwidth
+							translate(0,openingSize/2+eW/2);
+							
+							float[] cPos = new float[]{screenX(0, 0), screenY(0, 0), i};
+							//Draw the stem connector
+							float[] nPos = connectorMap.remove(stylei.conNumber);
+							int j = (int)nPos[2];
+							float[] dPos = new float[]{cPos[0] - nPos[0], cPos[1] - nPos[1]};
+							rotateToIdentity();
+							float cScl = getCounterScale();
+							translate(-dPos[0]*cScl, -dPos[1]*cScl);
+							float len = mag(dPos[0], dPos[1])*cScl;
+							rotate(atan2(dPos[1], dPos[0]));
+							//Custom gap, so that gap*(seqLen-1) = the correct length
+							drawStem_(i, j, len/(seqLen-1), trueDraw, deform);
+							popMatrix_drawMolecule();
+						} else {
+							pushMatrix_drawMolecule();
+							translate(0,-openingSize/2-eW/2);
+							float[] cPos = new float[]{screenX(0, 0), screenY(0, 0), i};
+							connectorMap.put(stylei.conNumber, cPos);
+							popMatrix_drawMolecule();
+						}
+					}
+				}
+				private float openingSize = HairpinStem.openingSize*eW*2;
+				private void drawStem_(int i, int j, float gap, boolean trueDraw, MolecularDeformation deform) {
+					int domain = dpg.getDomain(i);
+					int domain2 = dpg.getDomain(j);
+					CircDesigNAStyle stylei = dpg.getStyle(i).duplicate();
+					CircDesigNAStyle stylej = dpg.getStyle(j).duplicate();
 
 					int seqLen = dsd.getDomainLength(domain);
 					if (seqLen == 0){
 						throw new RuntimeException("Do not call drawMoleculeStem on a zero length stem!");
 					}
-					float openingSize = HairpinStem.openingSize*eW*2;
 
-					pushMatrix_drawMolecule();
-					try {
-						translate(-eW*2, 0);
-						translate(eW*2*seqLen/2f, 0);
-						translate(0,-openingSize/2);
-						drawDomainLabel(dsd.getDomainName(domain),seqLen/2f*eW*2, trueDraw, deform);
+					if (stylei.conNumber == 0){
+						pushMatrix_drawMolecule();
+						try {
+							translate(gap*(seqLen-1)/2f, 0);
+							translate(0,-openingSize/2);
+							drawDomainLabel(i, dsd.getDomainName(domain),seqLen/2f*eW*2, trueDraw, deform);
+							translate(0,openingSize);
+							rotate(PI);
+							drawDomainLabel(j, dsd.getDomainName(domain2),seqLen/2f*eW*2, trueDraw, deform);
+						} finally {
+							popMatrix_drawMolecule();
+						}
+					}
+
+					
+					if (stylei.conNumber > 0){
+						//Get rid of the connumbers
+						stylei.conNumber = 0;
+						stylej.conNumber = 0;
+						translate(-eW*1.5f,-openingSize/2);
+						if(trueDraw){
+							drawBase(eW*3 + gap*(seqLen-1),stylei);
+						}
 						translate(0,openingSize);
-						rotate(PI);
-						drawDomainLabel(dsd.getDomainName(domain2),seqLen/2f*eW*2, trueDraw, deform);
-					} finally {
-						popMatrix_drawMolecule();
+						if(trueDraw){
+							drawBase(eW*3 + gap*(seqLen-1),stylej);
+						}
+						translate(eW*1.5f,-openingSize/2);	
+					} else {
+						//Get rid of the connumbers
+						stylei.conNumber = 0;
+						stylej.conNumber = 0;
+						translate(0,-openingSize/2);
+						if(trueDraw){
+							drawBase(gap*(seqLen-1),stylei);
+						}
+						translate(0,openingSize);
+						if(trueDraw){
+							drawBase(gap*(seqLen-1),stylej);
+						}
+						translate(0,-openingSize/2);
 					}
-
-					translate(0,-openingSize/2);
-					if(trueDraw){
-						drawBase(eW*2*(seqLen-1),stylei);
-					}
-					translate(0,openingSize);
-					if(trueDraw){
-						drawBase(eW*2*(seqLen-1),stylej);
-					}
-					translate(0,-openingSize/2);
 				
-					stroke(0);
-					fill(0);
+					int col = color(0,0,0, min(stylei.color.getAlpha(), stylej.color.getAlpha()));
+					stroke(col);
+					fill(col);
 					for(int k = 0; k < seqLen; k++){
 						//hydrogen bonding
 						if (trueDraw){
@@ -675,10 +762,13 @@ public class MoleculePreview extends PApplet{
 							ellipse(0, 0, icD, icD);
 						}
 						if (k != seqLen - 1){
-							translate(eW*2, 0);
+							translate(gap, 0);
 						}
 					}
-
+				}
+				private void drawMoleculeStem(int i, boolean trueDraw, MolecularDeformation deform) {
+					int j = dpg.getDomainPair(i);
+					drawStem_(i, j, eW*2, trueDraw, deform);
 					//Interior.
 					drawMoleculeLoop(i, trueDraw, deform);
 				}
@@ -918,6 +1008,7 @@ public class MoleculePreview extends PApplet{
 							rotate(-3*PI/4);
 							translate(unpairedBasesInRight*2*eW, 0);
 							rotate(PI);
+							//draw the right
 							if (dpg.getDomain((d-1+N)%N) != -1){
 								drawMoleculeSS((nick+1)%N, (d-1+N)%N, trueDraw, deform);
 							}
@@ -978,21 +1069,13 @@ public class MoleculePreview extends PApplet{
 					int N = dpg.length();
 					int j = dpg.getDomainPair(i);
 
-					if (dpg.getDomain((i+1)%N) == -1){
-						translate(0, -openingSize/2);
-						if(trueDraw){
-							draw3PEnd();
-						}
-						translate(0, openingSize/2);
-					}
-
 					translate(radius-hairpinOpeningAdjust, 0);
 					rotate(PI);
 					rotate(cp.nextArc() / 2); //Half of the initial hairpin.
 					//Draw the parts of the loop
 					for(int k = (i+1)%N; k != j; k = (k+1)%N){
 						float arc = cp.nextArc();
-						if (dpg.getDomain(k) == -1){
+						if (dpg.getDomain(k) == -1){ //3-prime end
 							int last = (k-1+N)%N;
 							if (dpg.getDomain(last) != -1 && dpg.getDomainPair(last) != -1){
 								//Attach ourselves to the last hairpin
@@ -1014,13 +1097,14 @@ public class MoleculePreview extends PApplet{
 							}
 						} else {
 							int pairk = dpg.getDomainPair(k);
-							if (pairk == -1){
+							CircDesigNAStyle stylek = dpg.getStyle(k);
+							if (pairk == -1){ //Unpaired
 								int domainK = dpg.getDomain(k);
 								pushMatrix_drawMolecule();
 								rotate(arc/2);
 								translate(radius, 0);
 								rotate(HALF_PI);
-								drawDomainLabel(dsd.getDomainName(domainK), radius, trueDraw, deform);
+								drawDomainLabel(k, dsd.getDomainName(domainK), radius, trueDraw, deform);
 								popMatrix_drawMolecule();
 								if(trueDraw){
 									int domainLen = dsd.getDomainLength(dpg.getDomain(k));
@@ -1028,15 +1112,21 @@ public class MoleculePreview extends PApplet{
 									noFill();
 									ellipseMode(CENTER);
 									noFill();
-									drawBase(0, dpg.getStyle(k));
-									arc(0, 0, 2*radius, 2*radius, 0, arc);
+									drawBase(0, stylek);
+									if (stylek.conNumber == 0){
+										arc(0, 0, 2*radius, 2*radius, 0, arc);
+									}
 								}
+								pushMatrix_drawMolecule();
+								rotate(arc);
+								translate(radius, 0);
+								handleConnector(k, trueDraw, deform);
+								popMatrix_drawMolecule();
 							} else {
 								pushMatrix_drawMolecule();
 								rotate(arc/2);
 								translate(radius-hairpinOpeningAdjust, 0);
 								int domainK = dpg.getDomain(k);
-								CircDesigNAStyle stylek = dpg.getStyle(k);
 								int domainKPair = dpg.getDomain(dpg.getDomainPair(k));
 								CircDesigNAStyle stylekpair = dpg.getStyle(dpg.getDomainPair(k));
 								translate(0, -openingSize/2);
@@ -1065,7 +1155,12 @@ public class MoleculePreview extends PApplet{
 					if (drawDomainNameOnLine){
 						return;
 					}
-					stroke(style.color.getRed(), style.color.getGreen(), style.color.getBlue());
+					if (style.conNumber > 0){
+						return;
+					}
+					//int col = lerpColor(g.backgroundColor, color(style.color.getRed(), style.color.getGreen(), style.color.getBlue()), style.color.getAlpha()/255.f);
+					stroke(style.color.getRed(), style.color.getGreen(), style.color.getBlue(), style.color.getAlpha());
+					//stroke(col);
 					//TODO: bold etcetera
 					if (len > 0){
 						line(0,0,len,0);
@@ -1115,8 +1210,9 @@ public class MoleculePreview extends PApplet{
 				public boolean dynamicWiggle = true; private long dynamicWiggle_clock = System.nanoTime();
 				public boolean drawLineStructure = false;
 				public boolean drawDomainNameOnLine = false; //Don't draw lines to represent bases, and draw the domain name in-line
-				public boolean showDomainNames = true;
+				public boolean drawDomainNames = true;
 				public boolean drawPolymerGraph = false;
+				public boolean drawDomainPositionsAsLabels = false; //Instead of drawing domain names, draw numbers 0 through dpg.length()
 				public boolean drawGrid = true;
 				public boolean uniformScale = false;
 				public boolean counterRotate = true;
@@ -1129,7 +1225,11 @@ public class MoleculePreview extends PApplet{
 						fill(color[0],color[1],color[2]);
 					}
 				}
-				private void drawDomainLabel(String domainName, float spacing, boolean trueDraw, MolecularDeformation deform) {
+				private void drawDomainLabel(int position, String domainName, float spacing, boolean trueDraw, MolecularDeformation deform) {
+					if (drawDomainPositionsAsLabels){
+						domainName = ""+position;
+					}
+					
 					pushMatrix_drawMolecule();
 					if (drawDomainNameOnLine){ //just draw them inline.
 					} else {
@@ -1159,18 +1259,27 @@ public class MoleculePreview extends PApplet{
 
 						scale(1/100f);
 						//A bit of Linear algebra. Reverse engineer our current rotation and flip.
-						final float[] counterRotation = getCounterRotation();
-						scale(1,counterRotation[1]);
-						rotate(counterRotation[0]);
+						rotateToIdentity();
 						if (!domainName.endsWith("*")){
 							domainName += " ";
 						}
-						textAlign(CENTER,CENTER);
-						if (showDomainNames){
+						if (drawDomainNames){
+							textAlign(CENTER,CENTER);
 							text(domainName, 0, 0);
 						}
 					}
 					popMatrix_drawMolecule();
+				}
+				private void rotateToIdentity() {
+					final float[] counterRotation = getCounterRotation();
+					scale(1,counterRotation[1]);
+					rotate(counterRotation[0]);
+				}
+				private float getCounterScale(){
+					float dSx = screenX(1,0)-screenX(0,1);
+					float dSy = screenY(1,0)-screenY(0,1);
+					//Distance should be sqrt (2), if the transformation is purely planar.
+					return sqrt(2/(dSx*dSx + dSy*dSy));
 				}
 			}
 			private float[] getCounterRotation(){
@@ -1246,16 +1355,17 @@ public class MoleculePreview extends PApplet{
 					isSnapshotting = true;
 					File temp;
 					try {
-						if(snapshotPath==null){
+						if(snapshotDir==null){
 							String pathToTmp = File.createTempFile("DNADesignPreview"+System.nanoTime(), ".tmp").getPath();
 							int len = pathToTmp.length();
 							File pathToTmpDir = new File(pathToTmp.substring(0,len-4));
 							pathToTmpDir.mkdir();
 
-							snapshotPath = pathToTmpDir.getAbsolutePath();
+							snapshotDir = pathToTmpDir.getAbsolutePath();
 						}
 						String sanitizedMolname = currentMoleculeName.replaceAll("[\\\\\\/:\\*\\?\"\'<>|]", "_");
-						beginRecord(PDF, snapshotPath+"/"+sanitizedMolname+".pdf");
+						snapshotPath = snapshotDir+"/"+sanitizedMolname+".pdf";
+						beginRecord(PDF, snapshotPath); 
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -1273,7 +1383,9 @@ public class MoleculePreview extends PApplet{
 					if (maxScale!=0){ //This should always happen, but race conditions can screw up
 						moleculeScale_override = minScale;
 					}
-					strokeWeight(strokeWidth/width);
+				}
+				if (needsSnapshot){
+					strokeWeight(strokeWidth/192);
 				}
 				pushMatrix();
 				scale(width,height);
